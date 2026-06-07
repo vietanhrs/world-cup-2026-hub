@@ -37,6 +37,7 @@ import {
   IconTrophy,
   IconUsersGroup,
 } from '@tabler/icons-react';
+import { actualRosters } from './data/rosters';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './App.css';
@@ -50,7 +51,11 @@ type Team = {
   color: string;
   roster: Record<'Thủ môn' | 'Hậu vệ' | 'Tiền vệ' | 'Tiền đạo', string[]>;
   xi: string[];
+  rosterSource: string;
+  rosterFetchedAt: string;
 };
+
+type BaseTeam = Omit<Team, 'roster' | 'xi' | 'rosterSource' | 'rosterFetchedAt'>;
 
 type Match = {
   id: string;
@@ -66,7 +71,7 @@ type Match = {
 type Prediction = Record<string, { home: number | null; away: number | null }>;
 type Standing = { team: Team; played: number; won: number; drawn: number; lost: number; gf: number; ga: number; gd: number; points: number };
 
-const groups: Record<string, Array<Omit<Team, 'roster' | 'xi'>>> = {
+const groups: Record<string, BaseTeam[]> = {
   A: [
     { id: 'mexico', name: 'Mexico', code: 'MEX', group: 'A', seed: 1, color: '#006847' },
     { id: 'south-africa', name: 'South Africa', code: 'RSA', group: 'A', seed: 2, color: '#007a4d' },
@@ -141,71 +146,19 @@ const groups: Record<string, Array<Omit<Team, 'roster' | 'xi'>>> = {
   ],
 };
 
-const rosterNames = {
-  gk: ['No.1', 'No.2', 'No.3'],
-  df: ['Right Back', 'Centre Back A', 'Centre Back B', 'Left Back', 'Defender Cover'],
-  mf: ['Anchor Midfielder', 'Box Midfielder', 'Playmaker', 'Wide Midfielder', 'Pressing Midfielder'],
-  fw: ['Right Winger', 'Centre Forward', 'Left Winger', 'Second Striker', 'Impact Forward'],
-};
-
-const starRoster: Record<string, Partial<Team['roster']> & { xi?: string[] }> = {
-  brazil: {
-    'Thủ môn': ['Alisson', 'Ederson', 'Bento'],
-    'Hậu vệ': ['Marquinhos', 'Gabriel Magalhaes', 'Eder Militao', 'Guilherme Arana', 'Danilo'],
-    'Tiền vệ': ['Bruno Guimaraes', 'Lucas Paqueta', 'Joao Gomes', 'Andreas Pereira', 'Douglas Luiz'],
-    'Tiền đạo': ['Vinicius Junior', 'Rodrygo', 'Endrick', 'Raphinha', 'Richarlison'],
-    xi: ['Alisson', 'Danilo', 'Marquinhos', 'Gabriel Magalhaes', 'Guilherme Arana', 'Bruno Guimaraes', 'Lucas Paqueta', 'Rodrygo', 'Raphinha', 'Vinicius Junior', 'Endrick'],
-  },
-  france: {
-    'Thủ môn': ['Mike Maignan', 'Brice Samba', 'Alphonse Areola'],
-    'Hậu vệ': ['William Saliba', 'Jules Kounde', 'Ibrahima Konate', 'Theo Hernandez', 'Dayot Upamecano'],
-    'Tiền vệ': ['Aurelien Tchouameni', 'Eduardo Camavinga', 'Adrien Rabiot', 'Warren Zaire-Emery', 'N' + "'Golo Kante"],
-    'Tiền đạo': ['Kylian Mbappe', 'Ousmane Dembele', 'Antoine Griezmann', 'Marcus Thuram', 'Randal Kolo Muani'],
-    xi: ['Mike Maignan', 'Jules Kounde', 'William Saliba', 'Ibrahima Konate', 'Theo Hernandez', 'Aurelien Tchouameni', 'Eduardo Camavinga', 'Antoine Griezmann', 'Ousmane Dembele', 'Kylian Mbappe', 'Marcus Thuram'],
-  },
-  argentina: {
-    'Thủ môn': ['Emiliano Martinez', 'Geronimo Rulli', 'Franco Armani'],
-    'Hậu vệ': ['Cristian Romero', 'Lisandro Martinez', 'Nicolas Otamendi', 'Nahuel Molina', 'Nicolas Tagliafico'],
-    'Tiền vệ': ['Rodrigo De Paul', 'Enzo Fernandez', 'Alexis Mac Allister', 'Leandro Paredes', 'Giovani Lo Celso'],
-    'Tiền đạo': ['Lionel Messi', 'Julian Alvarez', 'Lautaro Martinez', 'Angel Di Maria', 'Nicolas Gonzalez'],
-    xi: ['Emiliano Martinez', 'Nahuel Molina', 'Cristian Romero', 'Lisandro Martinez', 'Nicolas Tagliafico', 'Rodrigo De Paul', 'Enzo Fernandez', 'Alexis Mac Allister', 'Lionel Messi', 'Julian Alvarez', 'Lautaro Martinez'],
-  },
-  england: {
-    'Thủ môn': ['Jordan Pickford', 'Aaron Ramsdale', 'Dean Henderson'],
-    'Hậu vệ': ['John Stones', 'Marc Guehi', 'Kyle Walker', 'Luke Shaw', 'Trent Alexander-Arnold'],
-    'Tiền vệ': ['Declan Rice', 'Jude Bellingham', 'Phil Foden', 'Kobbie Mainoo', 'Conor Gallagher'],
-    'Tiền đạo': ['Harry Kane', 'Bukayo Saka', 'Cole Palmer', 'Anthony Gordon', 'Ollie Watkins'],
-    xi: ['Jordan Pickford', 'Kyle Walker', 'John Stones', 'Marc Guehi', 'Luke Shaw', 'Declan Rice', 'Jude Bellingham', 'Phil Foden', 'Bukayo Saka', 'Harry Kane', 'Cole Palmer'],
-  },
-  portugal: {
-    'Thủ môn': ['Diogo Costa', 'Rui Patricio', 'Jose Sa'],
-    'Hậu vệ': ['Ruben Dias', 'Pepe', 'Joao Cancelo', 'Nuno Mendes', 'Diogo Dalot'],
-    'Tiền vệ': ['Bruno Fernandes', 'Bernardo Silva', 'Vitinha', 'Joao Palhinha', 'Ruben Neves'],
-    'Tiền đạo': ['Cristiano Ronaldo', 'Rafael Leao', 'Diogo Jota', 'Goncalo Ramos', 'Joao Felix'],
-    xi: ['Diogo Costa', 'Joao Cancelo', 'Ruben Dias', 'Pepe', 'Nuno Mendes', 'Joao Palhinha', 'Vitinha', 'Bruno Fernandes', 'Bernardo Silva', 'Rafael Leao', 'Cristiano Ronaldo'],
-  },
-  spain: {
-    'Thủ môn': ['Unai Simon', 'David Raya', 'Alex Remiro'],
-    'Hậu vệ': ['Dani Carvajal', 'Aymeric Laporte', 'Robin Le Normand', 'Alejandro Grimaldo', 'Marc Cucurella'],
-    'Tiền vệ': ['Rodri', 'Pedri', 'Gavi', 'Fabian Ruiz', 'Mikel Merino'],
-    'Tiền đạo': ['Lamine Yamal', 'Nico Williams', 'Alvaro Morata', 'Dani Olmo', 'Mikel Oyarzabal'],
-    xi: ['Unai Simon', 'Dani Carvajal', 'Robin Le Normand', 'Aymeric Laporte', 'Alejandro Grimaldo', 'Rodri', 'Pedri', 'Fabian Ruiz', 'Lamine Yamal', 'Alvaro Morata', 'Nico Williams'],
-  },
-};
-
 const teams: Team[] = Object.values(groups).flatMap((list) =>
   list.map((team) => {
-    const roster = starRoster[team.id];
-    const fallback = {
-      'Thủ môn': rosterNames.gk.map((name) => `${team.name} ${name}`),
-      'Hậu vệ': rosterNames.df.map((name) => `${team.name} ${name}`),
-      'Tiền vệ': rosterNames.mf.map((name) => `${team.name} ${name}`),
-      'Tiền đạo': rosterNames.fw.map((name) => `${team.name} ${name}`),
-    };
+    const actualRoster = actualRosters[team.id];
+    if (!actualRoster) {
+      throw new Error(`Missing roster data for ${team.id}`);
+    }
+
     return {
       ...team,
-      roster: { ...fallback, ...roster },
-      xi: roster?.xi ?? [...fallback['Thủ môn'].slice(0, 1), ...fallback['Hậu vệ'].slice(0, 4), ...fallback['Tiền vệ'].slice(0, 3), ...fallback['Tiền đạo'].slice(0, 3)],
+      roster: actualRoster.roster,
+      xi: actualRoster.xi,
+      rosterSource: actualRoster.source,
+      rosterFetchedAt: actualRoster.fetchedAt,
     };
   }),
 );
@@ -622,7 +575,10 @@ function App() {
           <Stack>
             <Group>
               <ThemeIcon color="green"><IconFlag size={18} /></ThemeIcon>
-              <Text fw={700}>Bảng {selectedTeam.group} · {selectedTeam.code}</Text>
+              <Stack gap={0}>
+                <Text fw={700}>Bảng {selectedTeam.group} · {selectedTeam.code}</Text>
+                <Text size="xs" c="dimmed">Current squad · fetched {selectedTeam.rosterFetchedAt}</Text>
+              </Stack>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               {Object.entries(selectedTeam.roster).map(([role, players]) => (
@@ -635,6 +591,9 @@ function App() {
             <Card withBorder className="xi-card">
               <Group mb="xs"><IconShield size={16} /><Text fw={700}>Đội hình mạnh nhất dự kiến</Text></Group>
               <Text size="sm">{selectedTeam.xi.join(' · ')}</Text>
+              <Text component="a" href={selectedTeam.rosterSource} target="_blank" rel="noreferrer" size="xs" c="dimmed" mt="xs">
+                Source: Wikipedia current squad
+              </Text>
             </Card>
           </Stack>
         )}
