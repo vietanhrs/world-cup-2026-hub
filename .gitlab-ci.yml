@@ -5,7 +5,7 @@ include:
 
 variables:
   NO_SCAN_FILES: ".gitignore|coverage|node_modules|dist"
-  IMAGE_REPOSITORY: registry.tekoapis.com/teko-registry/nio/wc2026-prediction
+  IMAGE_REPOSITORY: registry.tekoapis.com/teko-registry/nio/demo/wc2026-prediction
   DOCKER_BUILD_OPTS: "-f ./docker/Dockerfile"
 
 .bun_setup:
