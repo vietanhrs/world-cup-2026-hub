@@ -106,6 +106,138 @@
   min-height: 168px;
 }
 
+
+.roster-modal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 18px;
+  align-items: start;
+}
+
+.roster-list {
+  min-width: 0;
+}
+
+.pitch-board {
+  position: sticky;
+  top: 12px;
+  min-height: 560px;
+  aspect-ratio: 9 / 16;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 18px, transparent 18px 36px),
+    linear-gradient(180deg, #2f8f46 0%, #1f7938 50%, #17612f 100%);
+  box-shadow: inset 0 0 0 1px rgba(4, 18, 12, 0.28), 0 18px 46px rgba(0, 0, 0, 0.24);
+}
+
+.pitch-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.center-line {
+  top: 50%;
+}
+
+.pitch-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92px;
+  height: 92px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.pitch-box {
+  position: absolute;
+  left: 20%;
+  width: 60%;
+  height: 90px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+}
+
+.top-box {
+  top: -2px;
+}
+
+.bottom-box {
+  bottom: -2px;
+}
+
+.pitch-player {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  width: 70px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.shirt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  border-radius: 8px 8px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+.shirt::before,
+.shirt::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  width: 13px;
+  height: 16px;
+  border-radius: 7px;
+  background: inherit;
+  border: inherit;
+  z-index: -1;
+}
+
+.shirt::before {
+  left: -9px;
+  transform: rotate(18deg);
+}
+
+.shirt::after {
+  right: -9px;
+  transform: rotate(-18deg);
+}
+
+.pitch-player-name {
+  width: 84px;
+  color: #ffffff;
+  line-height: 1.05;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.88);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 780px) {
+  .roster-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pitch-board {
+    position: relative;
+    width: min(100%, 320px);
+    min-height: 520px;
+    margin: 0 auto;
+  }
+}
+
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
