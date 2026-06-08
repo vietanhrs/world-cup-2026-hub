@@ -34,6 +34,7 @@ import {
   IconShare3,
   IconShield,
   IconSparkles,
+  IconTrash,
   IconTrophy,
   IconUsersGroup,
 } from '@tabler/icons-react';
@@ -157,6 +158,62 @@ const teams: Team[] = Object.values(groups).flatMap((list) =>
 
 const teamMap = Object.fromEntries(teams.map((team) => [team.id, team]));
 const groupKeys = Object.keys(groups);
+const teamStrengths: Record<string, number> = {
+  spain: 99,
+  france: 99,
+  argentina: 98,
+  england: 96,
+  portugal: 95,
+  brazil: 95,
+  netherlands: 94,
+  morocco: 93,
+  germany: 92,
+  belgium: 89,
+  uruguay: 88,
+  croatia: 87,
+  japan: 86,
+  colombia: 85,
+  switzerland: 84,
+  usa: 84,
+  senegal: 83,
+  austria: 82,
+  norway: 82,
+  turkiye: 82,
+  ecuador: 81,
+  algeria: 81,
+  paraguay: 80,
+  canada: 79,
+  czechia: 79,
+  scotland: 79,
+  sweden: 79,
+  australia: 78,
+  'cote-divoire': 78,
+  ghana: 78,
+  'korea-republic': 78,
+  egypt: 77,
+  tunisia: 76,
+  'saudi-arabia': 75,
+  qatar: 74,
+  iran: 73,
+  panama: 73,
+  'south-africa': 73,
+  uzbekistan: 73,
+  'cabo-verde': 72,
+  'congo-dr': 72,
+  iraq: 72,
+  jordan: 71,
+  bosnia: 70,
+  curacao: 69,
+  haiti: 69,
+  'new-zealand': 68,
+};
+
+const hostBonus: Record<string, number> = {
+  canada: 3,
+  mexico: 3,
+  usa: 3,
+};
+
 function scoreOf(prediction?: { home: number | null; away: number | null }): { home: number; away: number } | null {
   if (prediction?.home === null || prediction?.away === null || prediction?.home === undefined || prediction?.away === undefined) return null;
   return { home: prediction.home, away: prediction.away };
@@ -169,6 +226,15 @@ function winnerFromScore(match: Match, predictions: Prediction, resolver: (ref: 
   if (!score || typeof home === 'string' || typeof away === 'string') return null;
   if (score.home === score.away) return score.home >= 0 ? home : null;
   return score.home > score.away ? home : away;
+}
+
+function loserFromScore(match: Match, predictions: Prediction, resolver: (ref: string) => Team | string) {
+  const score = scoreOf(predictions[match.id]);
+  const home = resolver(match.homeRef);
+  const away = resolver(match.awayRef);
+  if (!score || typeof home === 'string' || typeof away === 'string') return null;
+  if (score.home === score.away) return score.home >= 0 ? away : null;
+  return score.home > score.away ? away : home;
 }
 
 function computeStandings(predictions: Prediction) {
@@ -224,33 +290,45 @@ function groupComplete(group: string, predictions: Prediction) {
   return groupMatches.filter((match) => match.group === group).every((match) => scoreOf(predictions[match.id]));
 }
 
+function thirdPlaceRows(standings: Record<string, Standing[]>, candidateGroups: string[], usedTeamIds: Set<string>) {
+  return candidateGroups
+    .map((group) => standings[group]?.[2])
+    .filter((row): row is Standing => Boolean(row) && !usedTeamIds.has(row.team.id))
+    .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.team.seed - b.team.seed);
+}
+
 function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>) {
   const winners: Record<string, Team> = {};
   const losers: Record<string, Team> = {};
+  const thirdSlots: Record<string, Team> = {};
+  const usedThirdPlaceTeamIds = new Set<string>();
   const resolver = (ref: string): Team | string => {
     if (teamMap[ref]) return teamMap[ref];
     if (ref.startsWith('W:')) return winners[ref.slice(2)] ?? `Thắng ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
     if (ref.startsWith('L:')) return losers[ref.slice(2)] ?? `Thua ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
-    if (/^[123][A-L]/.test(ref)) {
+    if (/^3[A-L]+$/.test(ref)) {
+      if (thirdSlots[ref]) return thirdSlots[ref];
+      const candidateGroups = ref.slice(1).split('');
+      if (!candidateGroups.every((group) => groupComplete(group, predictions))) return `Đội hạng ba (${ref.slice(1)})`;
+      const [bestThird] = thirdPlaceRows(standings, candidateGroups, usedThirdPlaceTeamIds);
+      if (!bestThird) return `Đội hạng ba (${ref.slice(1)})`;
+      thirdSlots[ref] = bestThird.team;
+      usedThirdPlaceTeamIds.add(bestThird.team.id);
+      return bestThird.team;
+    }
+    if (/^[12][A-L]$/.test(ref)) {
       const rank = Number(ref[0]) - 1;
       const group = ref[1];
-      if (rank < 2 && groupComplete(group, predictions)) return standings[group][rank].team;
-      if (rank === 0) return `Nhất bảng ${group}`;
-      if (rank === 1) return `Nhì bảng ${group}`;
-      return `Đội hạng ba (${ref.slice(1)})`;
+      if (groupComplete(group, predictions)) return standings[group][rank].team;
+      return rank === 0 ? `Nhất bảng ${group}` : `Nhì bảng ${group}`;
     }
     return ref;
   };
   knockoutMatches.forEach((match) => {
     const winner = winnerFromScore(match, predictions, resolver);
-    if (winner) {
-      winners[match.id] = winner;
-      const home = resolver(match.homeRef);
-      const away = resolver(match.awayRef);
-      if (typeof home !== 'string' && typeof away !== 'string') {
-        losers[match.id] = winner.id === home.id ? away : home;
-      }
-    }
+    const loser = loserFromScore(match, predictions, resolver);
+    if (winner) winners[match.id] = winner;
+    if (loser) losers[match.id] = loser;
   });
   return resolver;
 }
@@ -281,6 +359,43 @@ const kickoffFormatter = new Intl.DateTimeFormat(undefined, {
 
 function formatKickoff(kickoff: string) {
   return kickoffFormatter.format(new Date(kickoff));
+}
+
+function adjustedStrength(team: Team) {
+  return (teamStrengths[team.id] ?? 70) + (hostBonus[team.id] ?? 0);
+}
+
+function predictedScore(home: Team, away: Team, knockout = false) {
+  const diff = adjustedStrength(home) - adjustedStrength(away);
+  if (!knockout && Math.abs(diff) <= 2) return { home: 1, away: 1 };
+  if (diff >= 16) return { home: 3, away: 0 };
+  if (diff >= 9) return { home: 2, away: 0 };
+  if (diff >= 3) return { home: 2, away: 1 };
+  if (diff <= -16) return { home: 0, away: 3 };
+  if (diff <= -9) return { home: 0, away: 2 };
+  if (diff <= -3) return { home: 1, away: 2 };
+  return knockout ? { home: 2, away: 1 } : { home: 1, away: 1 };
+}
+
+function buildDefaultPredictions(): Prediction {
+  const predictions: Prediction = {};
+  groupMatches.forEach((match) => {
+    const home = teamMap[match.homeRef];
+    const away = teamMap[match.awayRef];
+    predictions[match.id] = predictedScore(home, away);
+  });
+
+  knockoutMatches.forEach((match) => {
+    const standings = computeStandings(predictions);
+    const resolver = buildResolver(predictions, standings);
+    const home = resolver(match.homeRef);
+    const away = resolver(match.awayRef);
+    if (typeof home !== 'string' && typeof away !== 'string') {
+      predictions[match.id] = predictedScore(home, away, true);
+    }
+  });
+
+  return predictions;
 }
 
 const theme = createTheme({
@@ -336,10 +451,11 @@ function MatchCard({ match, prediction, resolver, onScore, onRoster }: {
 }
 
 function App() {
-  const [predictions, setPredictions] = useState<Prediction>(() => (window.location.hash.startsWith('#p=') ? decodePrediction(window.location.hash) : {}));
+  const [predictions, setPredictions] = useState<Prediction>(() => (window.location.hash.startsWith('#p=') ? decodePrediction(window.location.hash) : buildDefaultPredictions()));
   const [activeGroup, setActiveGroup] = useState('A');
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [musicReady, setMusicReady] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const standings = useMemo(() => computeStandings(predictions), [predictions]);
@@ -381,6 +497,13 @@ function App() {
     notifications.show({ color: 'green', title: 'Đã copy link share', message: 'Người khác mở link sẽ thấy prediction hiện tại.' });
   };
 
+  const clearAll = () => {
+    setPredictions({});
+    setClearConfirmOpen(false);
+    window.history.replaceState(null, '', `${window.location.origin}${window.location.pathname}`);
+    notifications.show({ color: 'yellow', title: 'Đã xóa prediction', message: 'Tất cả tỉ số đã được đưa về trống.' });
+  };
+
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
       <Notifications position="top-right" />
@@ -397,6 +520,9 @@ function App() {
             <Group gap="xs">
               <Tooltip label="Share prediction">
                 <ActionIcon variant="light" size="lg" onClick={share}><IconShare3 size={18} /></ActionIcon>
+              </Tooltip>
+              <Tooltip label="Clear all predictions">
+                <ActionIcon variant="light" color="red" size="lg" onClick={() => setClearConfirmOpen(true)}><IconTrash size={18} /></ActionIcon>
               </Tooltip>
               <Button leftSection={<IconMusic size={18} />} onClick={onStart}>{musicReady ? 'Đang dự đoán' : 'Bắt đầu dự đoán'}</Button>
             </Group>
@@ -501,6 +627,17 @@ function App() {
           </Tabs>
         </AppShell.Main>
       </AppShell>
+
+
+      <Modal opened={clearConfirmOpen} onClose={() => setClearConfirmOpen(false)} title="Xóa toàn bộ prediction?" centered>
+        <Stack>
+          <Text size="sm">Tất cả tỉ số đang điền sẽ bị xóa khỏi màn hình hiện tại.</Text>
+          <Group justify="end">
+            <Button variant="default" onClick={() => setClearConfirmOpen(false)}>Hủy</Button>
+            <Button color="red" leftSection={<IconTrash size={16} />} onClick={clearAll}>Clear all</Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       <Modal opened={!!selectedTeam} onClose={() => setSelectedTeam(null)} title={selectedTeam ? `${selectedTeam.name} roster` : ''} size="lg">
         {selectedTeam && (
