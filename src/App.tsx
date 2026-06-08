@@ -38,6 +38,7 @@ import {
   IconUsersGroup,
 } from '@tabler/icons-react';
 import { actualRosters } from './data/rosters';
+import { allMatches, groupMatches, knockoutMatches, type ScheduleMatch } from './data/schedule';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './App.css';
@@ -57,16 +58,7 @@ type Team = {
 
 type BaseTeam = Omit<Team, 'roster' | 'xi' | 'rosterSource' | 'rosterFetchedAt'>;
 
-type Match = {
-  id: string;
-  stage: 'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'final';
-  label: string;
-  group?: string;
-  date: string;
-  venue: string;
-  homeRef: string;
-  awayRef: string;
-};
+type Match = ScheduleMatch;
 
 type Prediction = Record<string, { home: number | null; away: number | null }>;
 type Standing = { team: Team; played: number; won: number; drawn: number; lost: number; gf: number; ga: number; gd: number; points: number };
@@ -165,89 +157,6 @@ const teams: Team[] = Object.values(groups).flatMap((list) =>
 
 const teamMap = Object.fromEntries(teams.map((team) => [team.id, team]));
 const groupKeys = Object.keys(groups);
-const pairings = [
-  [0, 1],
-  [2, 3],
-  [0, 2],
-  [1, 3],
-  [0, 3],
-  [1, 2],
-];
-
-const groupMatches: Match[] = groupKeys.flatMap((group, groupIndex) =>
-  pairings.map(([home, away], index) => {
-    const groupTeams = groups[group];
-    const matchNumber = groupIndex * pairings.length + index + 1;
-    return {
-      id: `g-${group}-${index + 1}`,
-      stage: 'group',
-      label: `Trận ${matchNumber}`,
-      group,
-      date: `Jun ${11 + Math.floor(matchNumber / 4)}, 2026`,
-      venue: ['Mexico City', 'Toronto', 'Los Angeles', 'Vancouver', 'Dallas', 'Miami'][index],
-      homeRef: groupTeams[home].id,
-      awayRef: groupTeams[away].id,
-    };
-  }),
-);
-
-const r32Slots = [
-  ['1A', '3C/E/F'], ['2B', '2C'], ['1C', '3A/D/E'], ['1D', '2F'],
-  ['1E', '3B/C/D'], ['1F', '2A'], ['1G', '3H/I/J'], ['1H', '2G'],
-  ['1I', '3K/L/A'], ['1J', '2I'], ['1K', '3G/H/J'], ['1L', '2K'],
-  ['2D', '2E'], ['2H', '2J'], ['2L', '3I/K/L'], ['2A', '3B/F/G'],
-];
-
-const knockoutMatches: Match[] = [
-  ...r32Slots.map(([homeRef, awayRef], index) => ({
-    id: `r32-${index + 1}`,
-    stage: 'r32' as const,
-    label: `Vòng 32 - ${index + 1}`,
-    date: `Jun ${28 + Math.floor(index / 4)}, 2026`,
-    venue: ['Miami', 'Dallas', 'Boston', 'New York/New Jersey'][index % 4],
-    homeRef,
-    awayRef,
-  })),
-  ...Array.from({ length: 8 }, (_, index) => ({
-    id: `r16-${index + 1}`,
-    stage: 'r16' as const,
-    label: `Vòng 16 - ${index + 1}`,
-    date: `Jul ${5 + Math.floor(index / 2)}, 2026`,
-    venue: ['Philadelphia', 'Houston', 'Seattle', 'Mexico City'][index % 4],
-    homeRef: `W:r32-${index * 2 + 1}`,
-    awayRef: `W:r32-${index * 2 + 2}`,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    id: `qf-${index + 1}`,
-    stage: 'qf' as const,
-    label: `Tứ kết ${index + 1}`,
-    date: `Jul ${10 + Math.floor(index / 2)}, 2026`,
-    venue: ['Los Angeles', 'Kansas City', 'Miami', 'Boston'][index],
-    homeRef: `W:r16-${index * 2 + 1}`,
-    awayRef: `W:r16-${index * 2 + 2}`,
-  })),
-  ...Array.from({ length: 2 }, (_, index) => ({
-    id: `sf-${index + 1}`,
-    stage: 'sf' as const,
-    label: `Bán kết ${index + 1}`,
-    date: `Jul ${14 + index}, 2026`,
-    venue: ['Dallas', 'Atlanta'][index],
-    homeRef: `W:qf-${index * 2 + 1}`,
-    awayRef: `W:qf-${index * 2 + 2}`,
-  })),
-  {
-    id: 'final-1',
-    stage: 'final',
-    label: 'Chung kết',
-    date: 'Jul 19, 2026',
-    venue: 'New York/New Jersey',
-    homeRef: 'W:sf-1',
-    awayRef: 'W:sf-2',
-  },
-];
-
-const allMatches = [...groupMatches, ...knockoutMatches];
-
 function scoreOf(prediction?: { home: number | null; away: number | null }): { home: number; away: number } | null {
   if (prediction?.home === null || prediction?.away === null || prediction?.home === undefined || prediction?.away === undefined) return null;
   return { home: prediction.home, away: prediction.away };
@@ -317,9 +226,11 @@ function groupComplete(group: string, predictions: Prediction) {
 
 function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>) {
   const winners: Record<string, Team> = {};
+  const losers: Record<string, Team> = {};
   const resolver = (ref: string): Team | string => {
     if (teamMap[ref]) return teamMap[ref];
     if (ref.startsWith('W:')) return winners[ref.slice(2)] ?? `Thắng ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
+    if (ref.startsWith('L:')) return losers[ref.slice(2)] ?? `Thua ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
     if (/^[123][A-L]/.test(ref)) {
       const rank = Number(ref[0]) - 1;
       const group = ref[1];
@@ -332,7 +243,14 @@ function buildResolver(predictions: Prediction, standings: Record<string, Standi
   };
   knockoutMatches.forEach((match) => {
     const winner = winnerFromScore(match, predictions, resolver);
-    if (winner) winners[match.id] = winner;
+    if (winner) {
+      winners[match.id] = winner;
+      const home = resolver(match.homeRef);
+      const away = resolver(match.awayRef);
+      if (typeof home !== 'string' && typeof away !== 'string') {
+        losers[match.id] = winner.id === home.id ? away : home;
+      }
+    }
   });
   return resolver;
 }
@@ -349,6 +267,20 @@ function decodePrediction(hash: string): Prediction {
   } catch {
     return {};
   }
+}
+
+const kickoffFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
+
+function formatKickoff(kickoff: string) {
+  return kickoffFormatter.format(new Date(kickoff));
 }
 
 const theme = createTheme({
@@ -384,7 +316,7 @@ function MatchCard({ match, prediction, resolver, onScore, onRoster }: {
     <Card className="match-card" withBorder>
       <Group justify="space-between" align="start">
         <Stack gap={2}>
-          <Text size="xs" c="dimmed">{match.label} · {match.date}</Text>
+          <Text size="xs" c="dimmed">{match.label} · {formatKickoff(match.kickoff)}</Text>
           <Text size="xs" c="dimmed">{match.venue}</Text>
         </Stack>
         {score && <Badge color={score.home === score.away ? 'yellow' : 'green'}>{score.home}:{score.away}</Badge>}
@@ -543,7 +475,7 @@ function App() {
               <Title order={3} mt="xl" mb="md">Nhánh playoff</Title>
               <ScrollArea>
                 <div className="bracket">
-                  {(['r32', 'r16', 'qf', 'sf', 'final'] as Match['stage'][]).map((stage) => (
+                  {(['r32', 'r16', 'qf', 'sf', 'bronze', 'final'] as Match['stage'][]).map((stage) => (
                     <Stack key={stage} className="bracket-round">
                       <Badge color="green" variant="filled">{stage.toUpperCase()}</Badge>
                       {knockoutMatches.filter((match) => match.stage === stage).map((match) => {
