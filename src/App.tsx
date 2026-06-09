@@ -282,7 +282,7 @@ function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications position="top-right" />
-      <AppShell className="app-shell" header={{ height: 74 }} padding="md">
+      <AppShell className="app-shell" header={{ height: { base: 118, sm: 118, md: 74 } }} padding="md">
         <AppHeader
           currentTrackTitle={currentTrack?.title ?? 'No media tracks'}
           isMusicPlaying={isMusicPlaying}

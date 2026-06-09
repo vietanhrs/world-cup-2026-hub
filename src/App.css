@@ -19,6 +19,10 @@
   backdrop-filter: blur(18px);
 }
 
+.topbar-content {
+  align-content: center;
+}
+
 [data-mantine-color-scheme='light'] .topbar {
   background: rgba(248, 255, 249, 0.88);
   border-bottom-color: rgba(12, 88, 44, 0.14);
@@ -26,6 +30,7 @@
 
 .topbar-actions {
   flex-wrap: nowrap;
+  max-width: 100%;
 }
 
 .theme-switcher label {
@@ -35,6 +40,7 @@
 
 .music-player {
   min-width: 318px;
+  flex: 0 0 auto;
   padding: 4px;
   border: 1px solid rgba(34, 197, 94, 0.24);
   border-radius: 8px;
@@ -109,6 +115,12 @@
   margin-top: 18px;
 }
 
+.main-tabs [role='tablist'] {
+  max-width: 100%;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
 .group-switch {
   max-width: 100%;
   overflow-x: auto;
@@ -122,9 +134,11 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(216px, 1fr));
   gap: 8px;
-  min-width: 1384px;
+  width: 100%;
+  max-width: 100%;
   margin-top: 12px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .match-meta {
@@ -471,9 +485,22 @@
     padding: 26px;
   }
 
+  .topbar-content {
+    align-items: center;
+    gap: 8px;
+    padding-block: 8px;
+  }
+
   .topbar-actions {
-    flex-wrap: wrap;
-    justify-content: end;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .group-match-grid {
+    grid-template-columns: repeat(6, 216px);
   }
 }
 
@@ -485,6 +512,19 @@
 
   .topbar h2 {
     font-size: 18px;
+  }
+
+  .topbar-content {
+    padding-inline: 10px;
+  }
+
+  .topbar-subtitle,
+  .music-track-label {
+    display: none;
+  }
+
+  .music-player {
+    min-width: max-content;
   }
 
   .match-row {

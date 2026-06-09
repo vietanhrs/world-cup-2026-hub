@@ -53,14 +53,14 @@ export function AppHeader({
 
   return (
     <AppShell.Header className="topbar">
-      <Group h="100%" px="md" justify="space-between">
+      <Group h="100%" px="md" justify="space-between" className="topbar-content">
         <Group gap="sm">
           <ThemeIcon size={42} radius={8} color="green">
             <IconTrophy size={24} />
           </ThemeIcon>
           <Box>
             <Title order={2}>World Cup 2026 Hub</Title>
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" className="topbar-subtitle">
               Group table · knockout bracket · roster board
             </Text>
           </Box>

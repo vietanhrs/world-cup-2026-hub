@@ -1,6 +1,46 @@
 [
   {
+    "src": "/media/Cheerleader.mp3",
+    "title": "Cheerleader"
+  },
+  {
+    "src": "/media/Feet Don't Fail Me Now.mp3",
+    "title": "Feet Don't Fail Me Now"
+  },
+  {
+    "src": "/media/Live It Up.mp3",
+    "title": "Live It Up"
+  },
+  {
+    "src": "/media/Love Me Again.mp3",
+    "title": "Love Me Again"
+  },
+  {
+    "src": "/media/Nightmares.mp3",
+    "title": "Nightmares"
+  },
+  {
     "src": "/media/three-nations.mp3",
     "title": "three nations"
+  },
+  {
+    "src": "/media/Time-Bomb.mp3",
+    "title": "Time Bomb"
+  },
+  {
+    "src": "/media/Waka Waka.mp3",
+    "title": "Waka Waka"
+  },
+  {
+    "src": "/media/Walk.mp3",
+    "title": "Walk"
+  },
+  {
+    "src": "/media/Wavin' Flag.mp3",
+    "title": "Wavin' Flag"
+  },
+  {
+    "src": "/media/We Are One (Ole Ola).mp3",
+    "title": "We Are One (Ole Ola)"
   }
 ]
