@@ -1,5 +1,5 @@
-import { Badge, Button } from '@mantine/core';
-import type { Team } from '../types';
+import { Badge, Button } from "@mantine/core";
+import type { Team } from "../types";
 
 type TeamBadgeProps = {
   value: Team | string;
@@ -7,8 +7,12 @@ type TeamBadgeProps = {
 };
 
 export function TeamBadge({ value, onOpen }: TeamBadgeProps) {
-  if (typeof value === 'string') {
-    return <Badge color="gray" variant="outline">{value}</Badge>;
+  if (typeof value === "string") {
+    return (
+      <Badge color="gray" variant="outline">
+        {value}
+      </Badge>
+    );
   }
 
   return (
@@ -17,7 +21,9 @@ export function TeamBadge({ value, onOpen }: TeamBadgeProps) {
       variant="subtle"
       size="compact-sm"
       onClick={() => onOpen?.(value)}
-      leftSection={<span className="team-dot" style={{ background: value.color }} />}
+      leftSection={
+        <span className="team-dot" style={{ background: value.color }} />
+      }
     >
       {value.code}
     </Button>

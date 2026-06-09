@@ -1,7 +1,7 @@
-import { Text } from '@mantine/core';
-import type { Team } from '../types';
+import { Text } from "@mantine/core";
+import type { Team } from "../types";
 
-type PlayerLine = 'gk' | 'df' | 'mf' | 'fw';
+type PlayerLine = "gk" | "df" | "mf" | "fw";
 
 type PitchPlayer = {
   name: string;
@@ -11,11 +11,11 @@ type PitchPlayer = {
   y: number;
 };
 
-const roleToLine: Record<keyof Team['roster'], PlayerLine> = {
-  'Thủ môn': 'gk',
-  'Hậu vệ': 'df',
-  'Tiền vệ': 'mf',
-  'Tiền đạo': 'fw',
+const roleToLine: Record<keyof Team["roster"], PlayerLine> = {
+  "Thủ môn": "gk",
+  "Hậu vệ": "df",
+  "Tiền vệ": "mf",
+  "Tiền đạo": "fw",
 };
 
 const lineY: Record<PlayerLine, number> = {
@@ -26,14 +26,22 @@ const lineY: Record<PlayerLine, number> = {
 };
 
 function playerLine(team: Team, player: string): PlayerLine {
-  for (const [role, players] of Object.entries(team.roster) as [keyof Team['roster'], string[]][]) {
+  for (const [role, players] of Object.entries(team.roster) as [
+    keyof Team["roster"],
+    string[],
+  ][]) {
     if (players.includes(player)) return roleToLine[role];
   }
-  return 'mf';
+  return "mf";
 }
 
 function layoutPitchPlayers(team: Team): PitchPlayer[] {
-  const byLine: Record<PlayerLine, string[]> = { gk: [], df: [], mf: [], fw: [] };
+  const byLine: Record<PlayerLine, string[]> = {
+    gk: [],
+    df: [],
+    mf: [],
+    fw: [],
+  };
   team.xi.forEach((player) => {
     byLine[playerLine(team, player)].push(player);
   });
@@ -51,17 +59,25 @@ function layoutPitchPlayers(team: Team): PitchPlayer[] {
 }
 
 function jerseyTextColor(color: string) {
-  const hex = color.replace('#', '');
-  const value = hex.length === 3 ? hex.split('').map((part) => part + part).join('') : hex;
+  const hex = color.replace("#", "");
+  const value =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((part) => part + part)
+          .join("")
+      : hex;
   const red = Number.parseInt(value.slice(0, 2), 16);
   const green = Number.parseInt(value.slice(2, 4), 16);
   const blue = Number.parseInt(value.slice(4, 6), 16);
-  return red * 0.299 + green * 0.587 + blue * 0.114 > 150 ? '#07120c' : '#ffffff';
+  return red * 0.299 + green * 0.587 + blue * 0.114 > 150
+    ? "#07120c"
+    : "#ffffff";
 }
 
 function lastName(name: string) {
-  const parts = name.split(' ');
-  return parts.length > 1 ? parts.slice(-2).join(' ') : name;
+  const parts = name.split(" ");
+  return parts.length > 1 ? parts.slice(-2).join(" ") : name;
 }
 
 export function PitchBoard({ team }: { team: Team }) {
@@ -75,11 +91,20 @@ export function PitchBoard({ team }: { team: Team }) {
       <div className="pitch-box top-box" />
       <div className="pitch-box bottom-box" />
       {players.map((player) => (
-        <div className="pitch-player" style={{ left: `${player.x}%`, top: `${player.y}%` }} key={`${player.name}-${player.number}`}>
-          <div className="shirt" style={{ background: team.color, color: shirtTextColor }}>
+        <div
+          className="pitch-player"
+          style={{ left: `${player.x}%`, top: `${player.y}%` }}
+          key={`${player.name}-${player.number}`}
+        >
+          <div
+            className="shirt"
+            style={{ background: team.color, color: shirtTextColor }}
+          >
             <span>{player.number}</span>
           </div>
-          <Text className="pitch-player-name" size="xs" fw={700}>{lastName(player.name)}</Text>
+          <Text className="pitch-player-name" size="xs" fw={700}>
+            {lastName(player.name)}
+          </Text>
         </div>
       ))}
     </div>

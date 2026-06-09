@@ -1,6 +1,6 @@
-import type { ScheduleMatch } from './data/schedule';
+import type { ScheduleMatch } from "./data/schedule";
 
-export type RosterRole = 'Thủ môn' | 'Hậu vệ' | 'Tiền vệ' | 'Tiền đạo';
+export type RosterRole = "Thủ môn" | "Hậu vệ" | "Tiền vệ" | "Tiền đạo";
 
 export type Team = {
   id: string;
@@ -15,7 +15,10 @@ export type Team = {
   rosterFetchedAt: string;
 };
 
-export type BaseTeam = Omit<Team, 'roster' | 'xi' | 'rosterSource' | 'rosterFetchedAt'>;
+export type BaseTeam = Omit<
+  Team,
+  "roster" | "xi" | "rosterSource" | "rosterFetchedAt"
+>;
 export type Match = ScheduleMatch;
 export type PredictionScore = { home: number | null; away: number | null };
 export type Prediction = Record<string, PredictionScore>;

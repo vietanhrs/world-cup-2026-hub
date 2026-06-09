@@ -1,9 +1,20 @@
-import { Badge, Card, Divider, Group, ScrollArea, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
-import { knockoutMatches } from '../data/schedule';
-import { groupKeys } from '../data/groups';
-import { groupComplete } from '../utils/predictions';
-import { TeamBadge } from './TeamBadge';
-import type { Match, Prediction, Standing, Team } from '../types';
+import {
+  Badge,
+  Card,
+  Divider,
+  Group,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
+import { knockoutMatches } from "../data/schedule";
+import { groupKeys } from "../data/groups";
+import { groupComplete } from "../utils/predictions";
+import { TeamBadge } from "./TeamBadge";
+import type { Match, Prediction, Standing, Team } from "../types";
 
 type ResultsPanelProps = {
   predictions: Prediction;
@@ -12,9 +23,21 @@ type ResultsPanelProps = {
   onRoster: (team: Team) => void;
 };
 
-const bracketStages: Match['stage'][] = ['r32', 'r16', 'qf', 'sf', 'bronze', 'final'];
+const bracketStages: Match["stage"][] = [
+  "r32",
+  "r16",
+  "qf",
+  "sf",
+  "bronze",
+  "final",
+];
 
-export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
+export function ResultsPanel({
+  predictions,
+  standings,
+  resolver,
+  onRoster,
+}: ResultsPanelProps) {
   return (
     <>
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
@@ -22,17 +45,32 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
           <Card key={group} withBorder className="standings-card">
             <Group justify="space-between" mb="sm">
               <Title order={4}>Bảng {group}</Title>
-              <Badge color={groupComplete(group, predictions) ? 'green' : 'gray'}>{groupComplete(group, predictions) ? 'Đủ trận' : 'Đang dự đoán'}</Badge>
+              <Badge
+                color={groupComplete(group, predictions) ? "green" : "gray"}
+              >
+                {groupComplete(group, predictions) ? "Đủ trận" : "Đang dự đoán"}
+              </Badge>
             </Group>
             <Table.ScrollContainer minWidth={520}>
               <Table verticalSpacing="xs">
                 <Table.Thead>
-                  <Table.Tr><Table.Th>Team</Table.Th><Table.Th>Pts</Table.Th><Table.Th>P</Table.Th><Table.Th>GD</Table.Th><Table.Th>GF</Table.Th></Table.Tr>
+                  <Table.Tr>
+                    <Table.Th>Team</Table.Th>
+                    <Table.Th>Pts</Table.Th>
+                    <Table.Th>P</Table.Th>
+                    <Table.Th>GD</Table.Th>
+                    <Table.Th>GF</Table.Th>
+                  </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
                   {standings[group].map((row, index) => (
-                    <Table.Tr key={row.team.id} className={index < 2 ? 'qualified-row' : ''}>
-                      <Table.Td><TeamBadge value={row.team} onOpen={onRoster} /></Table.Td>
+                    <Table.Tr
+                      key={row.team.id}
+                      className={index < 2 ? "qualified-row" : ""}
+                    >
+                      <Table.Td>
+                        <TeamBadge value={row.team} onOpen={onRoster} />
+                      </Table.Td>
                       <Table.Td>{row.points}</Table.Td>
                       <Table.Td>{row.played}</Table.Td>
                       <Table.Td>{row.gd}</Table.Td>
@@ -45,27 +83,43 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
           </Card>
         ))}
       </SimpleGrid>
-      <Title order={3} mt="xl" mb="md">Nhánh playoff</Title>
+      <Title order={3} mt="xl" mb="md">
+        Nhánh playoff
+      </Title>
       <ScrollArea>
         <div className="bracket">
           {bracketStages.map((stage) => (
             <Stack key={stage} className="bracket-round">
-              <Badge color="green" variant="filled">{stage.toUpperCase()}</Badge>
-              {knockoutMatches.filter((match) => match.stage === stage).map((match) => {
-                const home = resolver(match.homeRef);
-                const away = resolver(match.awayRef);
-                const winner = resolver(`W:${match.id}`);
-                return (
-                  <Card key={match.id} withBorder className="bracket-card">
-                    <Text size="xs" c="dimmed">{match.label}</Text>
-                    <Group justify="space-between"><TeamBadge value={home} onOpen={onRoster} /><Text>{predictions[match.id]?.home ?? '-'}</Text></Group>
-                    <Group justify="space-between"><TeamBadge value={away} onOpen={onRoster} /><Text>{predictions[match.id]?.away ?? '-'}</Text></Group>
-                    <Divider my="xs" />
-                    <Text size="xs" c="dimmed">Winner</Text>
-                    <TeamBadge value={winner} onOpen={onRoster} />
-                  </Card>
-                );
-              })}
+              <Badge color="green" variant="filled">
+                {stage.toUpperCase()}
+              </Badge>
+              {knockoutMatches
+                .filter((match) => match.stage === stage)
+                .map((match) => {
+                  const home = resolver(match.homeRef);
+                  const away = resolver(match.awayRef);
+                  const winner = resolver(`W:${match.id}`);
+                  return (
+                    <Card key={match.id} withBorder className="bracket-card">
+                      <Text size="xs" c="dimmed">
+                        {match.label}
+                      </Text>
+                      <Group justify="space-between">
+                        <TeamBadge value={home} onOpen={onRoster} />
+                        <Text>{predictions[match.id]?.home ?? "-"}</Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <TeamBadge value={away} onOpen={onRoster} />
+                        <Text>{predictions[match.id]?.away ?? "-"}</Text>
+                      </Group>
+                      <Divider my="xs" />
+                      <Text size="xs" c="dimmed">
+                        Winner
+                      </Text>
+                      <TeamBadge value={winner} onOpen={onRoster} />
+                    </Card>
+                  );
+                })}
             </Stack>
           ))}
         </div>
