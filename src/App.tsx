@@ -28,6 +28,8 @@ type MusicTrack = {
   title: string;
 };
 
+type RepeatMode = 'one' | 'all';
+
 const audioFilePattern = /\.(mp3|wav|ogg|m4a|aac|flac)$/i;
 
 function titleFromTrackPath(path: string) {
@@ -70,10 +72,14 @@ function App() {
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('all');
+  const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicTracksRef = useRef<MusicTrack[]>([]);
   const currentTrackIndexRef = useRef(0);
+  const repeatModeRef = useRef<RepeatMode>('all');
+  const shuffleEnabledRef = useRef(false);
 
   const standings = useMemo(() => computeStandings(predictions), [predictions]);
   const resolver = useMemo(() => buildResolver(predictions, standings), [predictions, standings]);
@@ -98,6 +104,14 @@ function App() {
   useEffect(() => {
     currentTrackIndexRef.current = currentTrackIndex;
   }, [currentTrackIndex]);
+
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
+
+  useEffect(() => {
+    shuffleEnabledRef.current = shuffleEnabled;
+  }, [shuffleEnabled]);
 
   useEffect(() => {
     const loadTracks = async () => {
@@ -161,17 +175,35 @@ function App() {
     }
   };
 
+  const getNextTrackIndex = (direction: 1 | -1) => {
+    const tracks = musicTracksRef.current;
+    if (tracks.length === 0) return 0;
+    if (shuffleEnabledRef.current && tracks.length > 1) {
+      const nextIndexes = tracks.map((_, index) => index).filter((index) => index !== currentTrackIndexRef.current);
+      return nextIndexes[Math.floor(Math.random() * nextIndexes.length)];
+    }
+    return (currentTrackIndexRef.current + direction + tracks.length) % tracks.length;
+  };
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const onEnded = () => {
       const tracks = musicTracksRef.current;
+      if (repeatModeRef.current === 'one') {
+        void playTrack(currentTrackIndexRef.current);
+        return;
+      }
       if (tracks.length <= 1) {
+        if (repeatModeRef.current === 'all') {
+          void playTrack(currentTrackIndexRef.current);
+          return;
+        }
         setIsMusicPlaying(false);
         return;
       }
-      void playTrack((currentTrackIndexRef.current + 1) % tracks.length);
+      void playTrack(getNextTrackIndex(1));
     };
 
     audio.addEventListener('ended', onEnded);
@@ -197,15 +229,21 @@ function App() {
   const previousTrack = () => {
     const tracks = musicTracksRef.current;
     if (tracks.length === 0) return;
-    const nextIndex = (currentTrackIndexRef.current - 1 + tracks.length) % tracks.length;
-    void playTrack(nextIndex);
+    void playTrack(getNextTrackIndex(-1));
   };
 
   const nextTrack = () => {
     const tracks = musicTracksRef.current;
     if (tracks.length === 0) return;
-    const nextIndex = (currentTrackIndexRef.current + 1) % tracks.length;
-    void playTrack(nextIndex);
+    void playTrack(getNextTrackIndex(1));
+  };
+
+  const toggleRepeatMode = () => {
+    setRepeatMode((current) => (current === 'all' ? 'one' : 'all'));
+  };
+
+  const toggleShuffle = () => {
+    setShuffleEnabled((current) => !current);
   };
 
   const onScore = (id: string, side: 'home' | 'away', value: number | string | null) => {
@@ -249,10 +287,14 @@ function App() {
           currentTrackTitle={currentTrack?.title ?? 'No media tracks'}
           isMusicPlaying={isMusicPlaying}
           hasMusicTracks={musicTracks.length > 0}
+          repeatMode={repeatMode}
+          shuffleEnabled={shuffleEnabled}
           onMusicToggle={toggleMusic}
           onMusicStop={stopMusic}
           onMusicNext={nextTrack}
           onMusicPrevious={previousTrack}
+          onRepeatToggle={toggleRepeatMode}
+          onShuffleToggle={toggleShuffle}
           onShare={share}
           onClear={() => setClearConfirmOpen(true)}
         />

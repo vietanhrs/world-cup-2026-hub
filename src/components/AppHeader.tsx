@@ -7,20 +7,29 @@ import {
   IconPlayerSkipBack,
   IconPlayerSkipForward,
   IconPlayerStop,
+  IconRepeat,
+  IconRepeatOnce,
   IconShare3,
+  IconArrowsShuffle,
   IconSun,
   IconTrash,
   IconTrophy,
 } from '@tabler/icons-react';
 
+type RepeatMode = 'one' | 'all';
+
 type AppHeaderProps = {
   currentTrackTitle: string;
   isMusicPlaying: boolean;
   hasMusicTracks: boolean;
+  repeatMode: RepeatMode;
+  shuffleEnabled: boolean;
   onMusicToggle: () => void;
   onMusicStop: () => void;
   onMusicNext: () => void;
   onMusicPrevious: () => void;
+  onRepeatToggle: () => void;
+  onShuffleToggle: () => void;
   onShare: () => void;
   onClear: () => void;
 };
@@ -29,10 +38,14 @@ export function AppHeader({
   currentTrackTitle,
   isMusicPlaying,
   hasMusicTracks,
+  repeatMode,
+  shuffleEnabled,
   onMusicToggle,
   onMusicStop,
   onMusicNext,
   onMusicPrevious,
+  onRepeatToggle,
+  onShuffleToggle,
   onShare,
   onClear,
 }: AppHeaderProps) {
@@ -114,6 +127,32 @@ export function AppHeader({
             <Tooltip label="Next track">
               <ActionIcon variant="light" size="lg" onClick={onMusicNext} disabled={!hasMusicTracks}>
                 <IconPlayerSkipForward size={17} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={repeatMode === 'one' ? 'Repeat one' : 'Repeat all'}>
+              <ActionIcon
+                className="music-mode-button"
+                variant={repeatMode === 'one' ? 'filled' : 'light'}
+                color={repeatMode === 'one' ? 'yellow' : 'green'}
+                size="lg"
+                onClick={onRepeatToggle}
+                disabled={!hasMusicTracks}
+                aria-label={repeatMode === 'one' ? 'Repeat one' : 'Repeat all'}
+              >
+                {repeatMode === 'one' ? <IconRepeatOnce size={17} /> : <IconRepeat size={17} />}
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={shuffleEnabled ? 'Shuffle on' : 'Shuffle off'}>
+              <ActionIcon
+                className="music-mode-button"
+                variant={shuffleEnabled ? 'filled' : 'light'}
+                color={shuffleEnabled ? 'yellow' : 'green'}
+                size="lg"
+                onClick={onShuffleToggle}
+                disabled={!hasMusicTracks}
+                aria-label={shuffleEnabled ? 'Shuffle on' : 'Shuffle off'}
+              >
+                <IconArrowsShuffle size={17} />
               </ActionIcon>
             </Tooltip>
             <Tooltip label={currentTrackTitle}>
