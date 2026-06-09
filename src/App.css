@@ -100,10 +100,19 @@
 
 .match-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 64px 64px minmax(0, 1fr);
+  grid-template-columns: minmax(54px, max-content) 64px 64px minmax(54px, max-content);
   gap: 8px;
   align-items: center;
+  justify-content: center;
   margin-top: 12px;
+}
+
+.match-team-home {
+  justify-self: end;
+}
+
+.match-team-away {
+  justify-self: start;
 }
 
 .score-input input {
@@ -174,46 +183,26 @@
 
 .bracket {
   display: grid;
-  grid-template-columns:
-    minmax(124px, 140px) minmax(124px, 140px) minmax(124px, 140px) minmax(124px, 140px)
-    minmax(150px, 174px)
-    minmax(124px, 140px) minmax(124px, 140px) minmax(124px, 140px) minmax(124px, 140px);
-  gap: 12px;
+  grid-template-columns: repeat(4, 128px) 152px repeat(4, 128px);
+  grid-template-rows: 20px repeat(17, 48px);
+  column-gap: 14px;
+  row-gap: 4px;
   min-width: 1210px;
   padding: 2px 12px 12px 2px;
-  align-items: center;
+  align-items: stretch;
+  position: relative;
 }
 
-.bracket-round {
-  min-width: 0;
-  gap: 6px;
-}
-
-.bracket-r32 {
-  gap: 5px;
-}
-
-.bracket-r16 {
-  gap: 21px;
-}
-
-.bracket-qf {
-  gap: 80px;
-}
-
-.bracket-sf {
-  gap: 0;
-}
-
-.bracket-center {
+.bracket-round-label {
+  align-self: center;
   justify-self: center;
 }
 
 .bracket-card {
   position: relative;
-  min-height: 116px;
   padding: 8px;
   overflow: visible;
+  align-self: stretch;
 }
 
 .bracket-card::after {
@@ -225,16 +214,16 @@
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.75), rgba(250, 204, 21, 0.8));
 }
 
-.bracket-left .bracket-card::after {
+.bracket-left::after {
   right: -13px;
 }
 
-.bracket-right .bracket-card::after {
+.bracket-right::after {
   left: -13px;
   background: linear-gradient(90deg, rgba(250, 204, 21, 0.8), rgba(34, 197, 94, 0.75));
 }
 
-.bracket-finals .bracket-card::after {
+.bracket-center-card::after {
   display: none;
 }
 
@@ -255,9 +244,10 @@
   height: 7px;
 }
 
-.bracket-finals {
-  align-self: center;
-  gap: 10px;
+.winner-row {
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.16);
+  box-shadow: inset 3px 0 0 rgba(250, 204, 21, 0.88);
 }
 
 .bracket-card-final {
