@@ -4,17 +4,14 @@ import {
   Box,
   Button,
   Group,
+  SegmentedControl,
   Text,
   ThemeIcon,
   Title,
   Tooltip,
-} from "@mantine/core";
-import {
-  IconMusic,
-  IconShare3,
-  IconTrash,
-  IconTrophy,
-} from "@tabler/icons-react";
+  useMantineColorScheme,
+} from '@mantine/core';
+import { IconDeviceDesktop, IconMoon, IconMusic, IconShare3, IconSun, IconTrash, IconTrophy } from '@tabler/icons-react';
 
 type AppHeaderProps = {
   musicReady: boolean;
@@ -23,12 +20,9 @@ type AppHeaderProps = {
   onClear: () => void;
 };
 
-export function AppHeader({
-  musicReady,
-  onStart,
-  onShare,
-  onClear,
-}: AppHeaderProps) {
+export function AppHeader({ musicReady, onStart, onShare, onClear }: AppHeaderProps) {
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
+
   return (
     <AppShell.Header className="topbar">
       <Group h="100%" px="md" justify="space-between">
@@ -43,7 +37,39 @@ export function AppHeader({
             </Text>
           </Box>
         </Group>
-        <Group gap="xs">
+        <Group gap="xs" className="topbar-actions">
+          <SegmentedControl
+            className="theme-switcher"
+            size="xs"
+            value={colorScheme}
+            onChange={(value) => setColorScheme(value as 'light' | 'dark' | 'auto')}
+            data={[
+              {
+                value: 'dark',
+                label: (
+                  <Tooltip label="Dark">
+                    <IconMoon size={16} />
+                  </Tooltip>
+                ),
+              },
+              {
+                value: 'light',
+                label: (
+                  <Tooltip label="Light">
+                    <IconSun size={16} />
+                  </Tooltip>
+                ),
+              },
+              {
+                value: 'auto',
+                label: (
+                  <Tooltip label="System">
+                    <IconDeviceDesktop size={16} />
+                  </Tooltip>
+                ),
+              },
+            ]}
+          />
           <Tooltip label="Share prediction">
             <ActionIcon variant="light" size="lg" onClick={onShare}>
               <IconShare3 size={18} />
@@ -55,7 +81,7 @@ export function AppHeader({
             </ActionIcon>
           </Tooltip>
           <Button leftSection={<IconMusic size={18} />} onClick={onStart}>
-            {musicReady ? "Đang dự đoán" : "Bắt đầu dự đoán"}
+            {musicReady ? 'Đang dự đoán' : 'Bắt đầu dự đoán'}
           </Button>
         </Group>
       </Group>
