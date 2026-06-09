@@ -1,4 +1,4 @@
-import { Badge, Card, Divider, Group, ScrollArea, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
+import { Badge, Card, Divider, Group, ScrollArea, Stack, Table, Text, Title } from '@mantine/core';
 import { knockoutMatches } from '../data/schedule';
 import { groupKeys } from '../data/groups';
 import { groupComplete } from '../utils/predictions';
@@ -12,18 +12,70 @@ type ResultsPanelProps = {
   onRoster: (team: Team) => void;
 };
 
-const bracketStages: Match['stage'][] = ['r32', 'r16', 'qf', 'sf'];
-
 const finalStages: Match['stage'][] = ['final', 'bronze'];
 
-function winnerDestination(matchId: string) {
-  return knockoutMatches.find((match) => match.homeRef === `W:${matchId}` || match.awayRef === `W:${matchId}`);
+function matchesByStage(stage: Match['stage']) {
+  return knockoutMatches.filter((match) => match.stage === stage);
 }
 
 export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
+  const r32Matches = matchesByStage('r32');
+  const r16Matches = matchesByStage('r16');
+  const qfMatches = matchesByStage('qf');
+  const sfMatches = matchesByStage('sf');
+  const leftRounds = [
+    { label: 'R32', matches: r32Matches.slice(0, 8), className: 'bracket-r32' },
+    { label: 'R16', matches: r16Matches.slice(0, 4), className: 'bracket-r16' },
+    { label: 'QF', matches: qfMatches.slice(0, 2), className: 'bracket-qf' },
+    { label: 'SF', matches: sfMatches.slice(0, 1), className: 'bracket-sf' },
+  ];
+  const rightRounds = [
+    { label: 'SF', matches: sfMatches.slice(1, 2), className: 'bracket-sf' },
+    { label: 'QF', matches: qfMatches.slice(2, 4), className: 'bracket-qf' },
+    { label: 'R16', matches: r16Matches.slice(4, 8), className: 'bracket-r16' },
+    { label: 'R32', matches: r32Matches.slice(8, 16), className: 'bracket-r32' },
+  ];
+
+  const renderMatchCard = (match: Match, isFinalCard = false) => {
+    const home = resolver(match.homeRef);
+    const away = resolver(match.awayRef);
+    const winner = resolver(`W:${match.id}`);
+    return (
+      <Card key={match.id} withBorder className={`bracket-card ${isFinalCard ? `bracket-card-${match.stage}` : ''}`}>
+        <Text size="xs" c="dimmed">
+          {match.label}
+        </Text>
+        <Group justify="space-between" className="bracket-team-row">
+          <TeamBadge value={home} onOpen={onRoster} />
+          <Text fw={800}>{predictions[match.id]?.home ?? '-'}</Text>
+        </Group>
+        <Group justify="space-between" className="bracket-team-row">
+          <TeamBadge value={away} onOpen={onRoster} />
+          <Text fw={800}>{predictions[match.id]?.away ?? '-'}</Text>
+        </Group>
+        <Divider my={6} />
+        <Group justify="space-between" gap="xs">
+          <Text size="xs" c="dimmed">
+            Winner
+          </Text>
+          <TeamBadge value={winner} onOpen={onRoster} />
+        </Group>
+      </Card>
+    );
+  };
+
+  const renderRound = (round: { label: string; matches: Match[]; className: string }, side: 'left' | 'right') => (
+    <Stack key={`${side}-${round.label}`} className={`bracket-round ${round.className} bracket-${side}`}>
+      <Badge color="green" variant="filled" size="xs">
+        {round.label}
+      </Badge>
+      {round.matches.map((match) => renderMatchCard(match))}
+    </Stack>
+  );
+
   return (
     <>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="sm">
+      <div className="standings-grid">
         {groupKeys.map((group) => (
           <Card key={group} withBorder className="standings-card">
             <Group justify="space-between" mb={6}>
@@ -32,7 +84,7 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
                 {groupComplete(group, predictions) ? 'Đủ trận' : 'Đang dự đoán'}
               </Badge>
             </Group>
-            <Table.ScrollContainer minWidth={270}>
+            <Table.ScrollContainer minWidth={210}>
               <Table verticalSpacing={3} horizontalSpacing={4} className="standings-table">
                 <Table.Thead>
                   <Table.Tr>
@@ -60,86 +112,20 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
             </Table.ScrollContainer>
           </Card>
         ))}
-      </SimpleGrid>
+      </div>
       <Title order={3} mt="xl" mb="md">
         Nhánh playoff
       </Title>
       <ScrollArea type="auto">
         <div className="bracket">
-          {bracketStages.map((stage) => (
-            <Stack key={stage} className="bracket-round">
-              <Badge color="green" variant="filled" size="sm">
-                {stage.toUpperCase()}
-              </Badge>
-              {knockoutMatches
-                .filter((match) => match.stage === stage)
-                .map((match) => {
-                  const home = resolver(match.homeRef);
-                  const away = resolver(match.awayRef);
-                  const winner = resolver(`W:${match.id}`);
-                  const nextMatch = winnerDestination(match.id);
-                  return (
-                    <Card key={match.id} withBorder className="bracket-card">
-                      <Text size="xs" c="dimmed">
-                        {match.label}
-                      </Text>
-                      <Group justify="space-between">
-                        <TeamBadge value={home} onOpen={onRoster} />
-                        <Text>{predictions[match.id]?.home ?? '-'}</Text>
-                      </Group>
-                      <Group justify="space-between">
-                        <TeamBadge value={away} onOpen={onRoster} />
-                        <Text>{predictions[match.id]?.away ?? '-'}</Text>
-                      </Group>
-                      <Divider my="xs" />
-                      <Text size="xs" c="dimmed">
-                        Winner
-                      </Text>
-                      <TeamBadge value={winner} onOpen={onRoster} />
-                      {nextMatch && (
-                        <Text size="xs" className="bracket-next">
-                          → {nextMatch.label}
-                        </Text>
-                      )}
-                    </Card>
-                  );
-                })}
-            </Stack>
-          ))}
-          <Stack className="bracket-round bracket-finals">
+          {leftRounds.map((round) => renderRound(round, 'left'))}
+          <Stack className="bracket-round bracket-finals bracket-center">
             <Badge color="yellow" variant="filled" size="sm">
-              FINALS
+              FINAL
             </Badge>
-            {finalStages.map((stage) =>
-              knockoutMatches
-                .filter((match) => match.stage === stage)
-                .map((match) => {
-                  const home = resolver(match.homeRef);
-                  const away = resolver(match.awayRef);
-                  const winner = resolver(`W:${match.id}`);
-                  return (
-                    <Card key={match.id} withBorder className={`bracket-card bracket-card-${stage}`}>
-                      <Text size="xs" c="dimmed">
-                        {match.label}
-                      </Text>
-                      <Group justify="space-between">
-                        <TeamBadge value={home} onOpen={onRoster} />
-                        <Text>{predictions[match.id]?.home ?? '-'}</Text>
-                      </Group>
-                      <Group justify="space-between">
-                        <TeamBadge value={away} onOpen={onRoster} />
-                        <Text>{predictions[match.id]?.away ?? '-'}</Text>
-                      </Group>
-                      <Divider my="xs" />
-                      <Text size="xs" c="dimmed">
-                        Winner
-                      </Text>
-                      <TeamBadge value={winner} onOpen={onRoster} />
-                    </Card>
-                  );
-                }),
-            )}
+            {finalStages.map((stage) => matchesByStage(stage).map((match) => renderMatchCard(match, true)))}
           </Stack>
+          {rightRounds.map((round) => renderRound(round, 'right'))}
         </div>
       </ScrollArea>
     </>
