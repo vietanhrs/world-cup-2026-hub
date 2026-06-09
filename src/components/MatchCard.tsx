@@ -34,7 +34,6 @@ export function MatchCard({ match, prediction, resolver, onScore, onRoster, vari
             className="score-input"
             min={0}
             max={20}
-            hideControls
             value={prediction?.home ?? ''}
             onChange={(value) => onScore(match.id, 'home', value)}
             disabled={!hasTeams}
@@ -45,7 +44,6 @@ export function MatchCard({ match, prediction, resolver, onScore, onRoster, vari
             className="score-input"
             min={0}
             max={20}
-            hideControls
             value={prediction?.away ?? ''}
             onChange={(value) => onScore(match.id, 'away', value)}
             disabled={!hasTeams}

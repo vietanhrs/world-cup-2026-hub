@@ -131,7 +131,21 @@
 .score-input input {
   text-align: center;
   font-weight: 800;
-  padding-inline: 4px;
+  padding-inline: 4px 15px;
+}
+
+.score-input .mantine-NumberInput-controls {
+  width: 14px;
+}
+
+.score-input .mantine-NumberInput-control {
+  width: 14px;
+  min-height: 12px;
+}
+
+.score-input .mantine-NumberInput-control svg {
+  width: 8px;
+  height: 8px;
 }
 
 .team-button {
@@ -141,17 +155,17 @@
 }
 
 .match-card-group .team-button {
-  min-width: 48px;
+  min-width: 44px;
   padding-inline: 4px;
 }
 
 .match-card-group .match-row {
-  grid-template-columns: 48px 42px 42px 48px;
-  gap: 4px;
+  grid-template-columns: 44px 48px 48px 44px;
+  gap: 3px;
 }
 
 .match-card-group .score-input {
-  width: 42px;
+  width: 48px;
 }
 
 .team-dot {
