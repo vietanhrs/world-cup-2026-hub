@@ -1,26 +1,41 @@
+import { ActionIcon, AppShell, Box, Group, SegmentedControl, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme } from '@mantine/core';
 import {
-  ActionIcon,
-  AppShell,
-  Box,
-  Button,
-  Group,
-  SegmentedControl,
-  Text,
-  ThemeIcon,
-  Title,
-  Tooltip,
-  useMantineColorScheme,
-} from '@mantine/core';
-import { IconDeviceDesktop, IconMoon, IconMusic, IconShare3, IconSun, IconTrash, IconTrophy } from '@tabler/icons-react';
+  IconDeviceDesktop,
+  IconMoon,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlayerSkipBack,
+  IconPlayerSkipForward,
+  IconPlayerStop,
+  IconShare3,
+  IconSun,
+  IconTrash,
+  IconTrophy,
+} from '@tabler/icons-react';
 
 type AppHeaderProps = {
-  musicReady: boolean;
-  onStart: () => void;
+  currentTrackTitle: string;
+  isMusicPlaying: boolean;
+  hasMusicTracks: boolean;
+  onMusicToggle: () => void;
+  onMusicStop: () => void;
+  onMusicNext: () => void;
+  onMusicPrevious: () => void;
   onShare: () => void;
   onClear: () => void;
 };
 
-export function AppHeader({ musicReady, onStart, onShare, onClear }: AppHeaderProps) {
+export function AppHeader({
+  currentTrackTitle,
+  isMusicPlaying,
+  hasMusicTracks,
+  onMusicToggle,
+  onMusicStop,
+  onMusicNext,
+  onMusicPrevious,
+  onShare,
+  onClear,
+}: AppHeaderProps) {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
 
   return (
@@ -31,7 +46,7 @@ export function AppHeader({ musicReady, onStart, onShare, onClear }: AppHeaderPr
             <IconTrophy size={24} />
           </ThemeIcon>
           <Box>
-            <Title order={2}>WC 2026 Predictor</Title>
+            <Title order={2}>World Cup 2026 Hub</Title>
             <Text size="sm" c="dimmed">
               Group table · knockout bracket · roster board
             </Text>
@@ -80,9 +95,33 @@ export function AppHeader({ musicReady, onStart, onShare, onClear }: AppHeaderPr
               <IconTrash size={18} />
             </ActionIcon>
           </Tooltip>
-          <Button leftSection={<IconMusic size={18} />} onClick={onStart}>
-            {musicReady ? 'Đang dự đoán' : 'Bắt đầu dự đoán'}
-          </Button>
+          <Group gap={4} className="music-player" wrap="nowrap">
+            <Tooltip label="Previous track">
+              <ActionIcon variant="light" size="lg" onClick={onMusicPrevious} disabled={!hasMusicTracks}>
+                <IconPlayerSkipBack size={17} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={isMusicPlaying ? 'Pause' : 'Start / Resume'}>
+              <ActionIcon variant="filled" size="lg" color="green" onClick={onMusicToggle} disabled={!hasMusicTracks}>
+                {isMusicPlaying ? <IconPlayerPause size={17} /> : <IconPlayerPlay size={17} />}
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Stop">
+              <ActionIcon variant="light" size="lg" onClick={onMusicStop} disabled={!hasMusicTracks}>
+                <IconPlayerStop size={17} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Next track">
+              <ActionIcon variant="light" size="lg" onClick={onMusicNext} disabled={!hasMusicTracks}>
+                <IconPlayerSkipForward size={17} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={currentTrackTitle}>
+              <Text size="xs" fw={700} className="music-track-label">
+                {currentTrackTitle}
+              </Text>
+            </Tooltip>
+          </Group>
         </Group>
       </Group>
     </AppShell.Header>

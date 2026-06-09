@@ -33,6 +33,26 @@
   place-items: center;
 }
 
+.music-player {
+  min-width: 238px;
+  padding: 4px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 8px;
+  background: rgba(4, 18, 12, 0.42);
+}
+
+[data-mantine-color-scheme='light'] .music-player {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(12, 88, 44, 0.18);
+}
+
+.music-track-label {
+  max-width: 104px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
@@ -252,35 +272,33 @@
 .bracket-round-label {
   align-self: center;
   justify-self: center;
+  z-index: 1;
+}
+
+.bracket-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;
+}
+
+.bracket-lines path {
+  fill: none;
+  stroke: rgba(250, 204, 21, 0.78);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .bracket-card {
   position: relative;
+  z-index: 1;
   padding: 8px;
   overflow: visible;
   align-self: stretch;
-}
-
-.bracket-card::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 9px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.75), rgba(250, 204, 21, 0.8));
-}
-
-.bracket-left::after {
-  right: -10px;
-}
-
-.bracket-right::after {
-  left: -10px;
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.8), rgba(34, 197, 94, 0.75));
-}
-
-.bracket-center-card::after {
-  display: none;
 }
 
 .bracket-team-row {

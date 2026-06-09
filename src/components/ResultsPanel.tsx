@@ -66,6 +66,103 @@ const roundLabels: { label: string; col: number; color?: 'green' | 'yellow' }[] 
 ] as const;
 
 const matchById = Object.fromEntries(knockoutMatches.map((match) => [match.id, match]));
+const slotById = Object.fromEntries(bracketSlots.map((slot) => [slot.id, slot]));
+
+const bracketMetrics = {
+  columnWidths: [112, 112, 112, 112, 136, 112, 112, 112, 112],
+  columnGap: 9,
+  rowLabelHeight: 20,
+  rowHeight: 48,
+  rowGap: 4,
+  paddingTop: 2,
+  paddingRight: 12,
+  paddingBottom: 12,
+  paddingLeft: 2,
+};
+
+const bracketViewBox = {
+  width:
+    bracketMetrics.paddingLeft +
+    bracketMetrics.columnWidths.reduce((total, width) => total + width, 0) +
+    bracketMetrics.columnGap * (bracketMetrics.columnWidths.length - 1) +
+    bracketMetrics.paddingRight,
+  height:
+    bracketMetrics.paddingTop +
+    bracketMetrics.rowLabelHeight +
+    bracketMetrics.rowHeight * 17 +
+    bracketMetrics.rowGap * 17 +
+    bracketMetrics.paddingBottom,
+};
+
+function columnStart(col: number) {
+  return (
+    bracketMetrics.paddingLeft +
+    bracketMetrics.columnWidths.slice(0, col - 1).reduce((total, width) => total + width, 0) +
+    bracketMetrics.columnGap * (col - 1)
+  );
+}
+
+function rowStart(row: number) {
+  if (row === 1) return bracketMetrics.paddingTop;
+  return (
+    bracketMetrics.paddingTop +
+    bracketMetrics.rowLabelHeight +
+    bracketMetrics.rowGap +
+    (row - 2) * (bracketMetrics.rowHeight + bracketMetrics.rowGap)
+  );
+}
+
+function cardAnchor(slot: BracketSlot, side: 'left' | 'right') {
+  const x = columnStart(slot.col);
+  const width = bracketMetrics.columnWidths[slot.col - 1];
+  return {
+    x: side === 'left' ? x : x + width,
+    y: rowStart(slot.row) + (bracketMetrics.rowHeight * 2 + bracketMetrics.rowGap) / 2,
+  };
+}
+
+function dependencyIds(match: Match) {
+  return [match.homeRef, match.awayRef].flatMap((ref) => {
+    if (ref.startsWith('W:') || ref.startsWith('L:')) return [ref.slice(2)];
+    return [];
+  });
+}
+
+function connectionPaths(parent: Match) {
+  const parentSlot = slotById[parent.id];
+  const childSlots = dependencyIds(parent)
+    .map((id) => slotById[id])
+    .filter((slot): slot is BracketSlot => Boolean(slot));
+  if (!parentSlot || childSlots.length === 0) return [];
+
+  const leftChildren = childSlots.filter((slot) => slot.col < parentSlot.col);
+  const rightChildren = childSlots.filter((slot) => slot.col > parentSlot.col);
+
+  const drawSide = (sideChildren: BracketSlot[], side: 'left' | 'right') => {
+    if (sideChildren.length === 0) return [];
+    const parentAnchor = cardAnchor(parentSlot, side);
+    const childSide = side === 'left' ? 'right' : 'left';
+    const childAnchors = sideChildren.map((slot) => cardAnchor(slot, childSide));
+
+    if (childAnchors.length === 1) {
+      const child = childAnchors[0];
+      return [`M ${child.x} ${child.y} H ${parentAnchor.x}`];
+    }
+
+    const sortedChildren = childAnchors.sort((a, b) => a.y - b.y);
+    const joinX = side === 'left' ? parentAnchor.x - bracketMetrics.columnGap / 2 : parentAnchor.x + bracketMetrics.columnGap / 2;
+    const first = sortedChildren[0];
+    const last = sortedChildren[sortedChildren.length - 1];
+    const branchPaths = sortedChildren.map((child) => `M ${child.x} ${child.y} H ${joinX}`);
+    return [...branchPaths, `M ${joinX} ${first.y} V ${last.y}`, `M ${joinX} ${parentAnchor.y} H ${parentAnchor.x}`];
+  };
+
+  return [...drawSide(leftChildren, 'left'), ...drawSide(rightChildren, 'right')];
+}
+
+const bracketLinePaths = knockoutMatches.flatMap((match) =>
+  connectionPaths(match).map((path, index) => ({ id: `${match.id}-${index}`, path })),
+);
 
 export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
   const leftGroups = groupKeys.slice(0, 6);
@@ -145,6 +242,11 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
               Nhánh playoff
             </Title>
             <div className="bracket">
+              <svg className="bracket-lines" viewBox={`0 0 ${bracketViewBox.width} ${bracketViewBox.height}`} aria-hidden="true">
+                {bracketLinePaths.map((line) => (
+                  <path key={line.id} d={line.path} />
+                ))}
+              </svg>
               {roundLabels.map((round) => (
                 <Badge
                   key={`${round.label}-${round.col}`}

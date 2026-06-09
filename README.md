@@ -35,6 +35,10 @@ bun run dev
 bun run build
 ```
 
+## Media Tracks
+
+Put World Cup audio files in `public/media`. The app generates `public/media/tracks.json` before development and production builds, then uses that manifest for the music player playlist.
+
 ## Deployment
 
 The app is built as static assets and served by nginx on port `3000`.
