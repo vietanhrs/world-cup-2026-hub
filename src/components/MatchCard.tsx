@@ -1,5 +1,5 @@
-import { Badge, Card, Group, NumberInput, Stack, Text } from '@mantine/core';
-import { formatKickoff, scoreOf } from '../utils/predictions';
+import { Card, Group, NumberInput, Text } from '@mantine/core';
+import { formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, PredictionScore, Team } from '../types';
 
@@ -9,30 +9,21 @@ type MatchCardProps = {
   resolver: (ref: string) => Team | string;
   onScore: (id: string, side: 'home' | 'away', value: number | string | null) => void;
   onRoster: (team: Team) => void;
+  variant?: 'group' | 'knockout';
 };
 
-export function MatchCard({ match, prediction, resolver, onScore, onRoster }: MatchCardProps) {
+export function MatchCard({ match, prediction, resolver, onScore, onRoster, variant = 'group' }: MatchCardProps) {
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
-  const score = scoreOf(prediction);
   const hasTeams = typeof home !== 'string' && typeof away !== 'string';
+  const meta = variant === 'knockout' ? `${match.label} · ${formatKickoff(match.kickoff)}` : formatKickoff(match.kickoff);
 
   return (
-    <Card className="match-card" withBorder>
-      <Group justify="space-between" align="start">
-        <Stack gap={2}>
-          <Text size="xs" c="dimmed">
-            {match.label} · {formatKickoff(match.kickoff)}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {match.venue}
-          </Text>
-        </Stack>
-        {score && (
-          <Badge color={score.home === score.away ? 'yellow' : 'green'}>
-            {score.home}:{score.away}
-          </Badge>
-        )}
+    <Card className={`match-card match-card-${variant}`} withBorder>
+      <Group justify="center" align="center">
+        <Text size="xs" c="dimmed" ta="center" className="match-meta">
+          {meta}
+        </Text>
       </Group>
       <div className="match-row">
         <div className="match-team match-team-home">

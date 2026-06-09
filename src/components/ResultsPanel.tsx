@@ -68,6 +68,44 @@ const roundLabels: { label: string; col: number; color?: 'green' | 'yellow' }[] 
 const matchById = Object.fromEntries(knockoutMatches.map((match) => [match.id, match]));
 
 export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
+  const leftGroups = groupKeys.slice(0, 6);
+  const rightGroups = groupKeys.slice(6);
+
+  const renderStandingCard = (group: string) => (
+    <Card key={group} withBorder className="standings-card">
+      <Group justify="space-between" mb={6}>
+        <Title order={5}>Bảng {group}</Title>
+        <Badge size="xs" color={groupComplete(group, predictions) ? 'green' : 'gray'}>
+          {groupComplete(group, predictions) ? 'Đủ trận' : 'Đang dự đoán'}
+        </Badge>
+      </Group>
+      <Table.ScrollContainer minWidth={168}>
+        <Table verticalSpacing={3} horizontalSpacing={4} className="standings-table">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Team</Table.Th>
+              <Table.Th>Pts</Table.Th>
+              <Table.Th>P</Table.Th>
+              <Table.Th>GD</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {standings[group].map((row, index) => (
+              <Table.Tr key={row.team.id} className={index < 2 ? 'qualified-row' : ''}>
+                <Table.Td>
+                  <TeamBadge value={row.team} onOpen={onRoster} />
+                </Table.Td>
+                <Table.Td>{row.points}</Table.Td>
+                <Table.Td>{row.played}</Table.Td>
+                <Table.Td>{row.gd}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Card>
+  );
+
   const renderMatchCard = (match: Match, slot: BracketSlot) => {
     const home = resolver(match.homeRef);
     const away = resolver(match.awayRef);
@@ -99,62 +137,30 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
 
   return (
     <>
-      <div className="standings-grid">
-        {groupKeys.map((group) => (
-          <Card key={group} withBorder className="standings-card">
-            <Group justify="space-between" mb={6}>
-              <Title order={5}>Bảng {group}</Title>
-              <Badge size="xs" color={groupComplete(group, predictions) ? 'green' : 'gray'}>
-                {groupComplete(group, predictions) ? 'Đủ trận' : 'Đang dự đoán'}
-              </Badge>
-            </Group>
-            <Table.ScrollContainer minWidth={210}>
-              <Table verticalSpacing={3} horizontalSpacing={4} className="standings-table">
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Team</Table.Th>
-                    <Table.Th>Pts</Table.Th>
-                    <Table.Th>P</Table.Th>
-                    <Table.Th>GD</Table.Th>
-                    <Table.Th>GF</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {standings[group].map((row, index) => (
-                    <Table.Tr key={row.team.id} className={index < 2 ? 'qualified-row' : ''}>
-                      <Table.Td>
-                        <TeamBadge value={row.team} onOpen={onRoster} />
-                      </Table.Td>
-                      <Table.Td>{row.points}</Table.Td>
-                      <Table.Td>{row.played}</Table.Td>
-                      <Table.Td>{row.gd}</Table.Td>
-                      <Table.Td>{row.gf}</Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
-          </Card>
-        ))}
-      </div>
-      <Title order={3} mt="xl" mb="md">
-        Nhánh playoff
-      </Title>
       <ScrollArea type="auto">
-        <div className="bracket">
-          {roundLabels.map((round) => (
-            <Badge
-              key={`${round.label}-${round.col}`}
-              className="bracket-round-label"
-              color={round.color ?? 'green'}
-              variant="filled"
-              size="xs"
-              style={{ gridColumn: round.col, gridRow: 1 }}
-            >
-              {round.label}
-            </Badge>
-          ))}
-          {bracketSlots.map((slot) => renderMatchCard(matchById[slot.id], slot))}
+        <div className="results-board">
+          <div className="standings-side standings-side-left">{leftGroups.map(renderStandingCard)}</div>
+          <section className="playoff-center">
+            <Title order={3} mb="md" ta="center">
+              Nhánh playoff
+            </Title>
+            <div className="bracket">
+              {roundLabels.map((round) => (
+                <Badge
+                  key={`${round.label}-${round.col}`}
+                  className="bracket-round-label"
+                  color={round.color ?? 'green'}
+                  variant="filled"
+                  size="xs"
+                  style={{ gridColumn: round.col, gridRow: 1 }}
+                >
+                  {round.label}
+                </Badge>
+              ))}
+              {bracketSlots.map((slot) => renderMatchCard(matchById[slot.id], slot))}
+            </div>
+          </section>
+          <div className="standings-side standings-side-right">{rightGroups.map(renderStandingCard)}</div>
         </div>
       </ScrollArea>
     </>

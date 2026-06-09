@@ -1,51 +1,28 @@
-import { allMatches, groupMatches, knockoutMatches } from "../data/schedule";
-import { groupKeys, groups, teamMap } from "../data/groups";
-import { hostBonus, teamStrengths } from "../data/teamStrengths";
-import type {
-  Match,
-  Prediction,
-  PredictionScore,
-  Standing,
-  Team,
-} from "../types";
+import { allMatches, groupMatches, knockoutMatches } from '../data/schedule';
+import { groupKeys, groups, teamMap } from '../data/groups';
+import { hostBonus, teamStrengths } from '../data/teamStrengths';
+import type { Match, Prediction, PredictionScore, Standing, Team } from '../types';
 
-export function scoreOf(
-  prediction?: PredictionScore,
-): { home: number; away: number } | null {
-  if (
-    prediction?.home === null ||
-    prediction?.away === null ||
-    prediction?.home === undefined ||
-    prediction?.away === undefined
-  )
+export function scoreOf(prediction?: PredictionScore): { home: number; away: number } | null {
+  if (prediction?.home === null || prediction?.away === null || prediction?.home === undefined || prediction?.away === undefined)
     return null;
   return { home: prediction.home, away: prediction.away };
 }
 
-function winnerFromScore(
-  match: Match,
-  predictions: Prediction,
-  resolver: (ref: string) => Team | string,
-) {
+function winnerFromScore(match: Match, predictions: Prediction, resolver: (ref: string) => Team | string) {
   const score = scoreOf(predictions[match.id]);
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
-  if (!score || typeof home === "string" || typeof away === "string")
-    return null;
+  if (!score || typeof home === 'string' || typeof away === 'string') return null;
   if (score.home === score.away) return score.home >= 0 ? home : null;
   return score.home > score.away ? home : away;
 }
 
-function loserFromScore(
-  match: Match,
-  predictions: Prediction,
-  resolver: (ref: string) => Team | string,
-) {
+function loserFromScore(match: Match, predictions: Prediction, resolver: (ref: string) => Team | string) {
   const score = scoreOf(predictions[match.id]);
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
-  if (!score || typeof home === "string" || typeof away === "string")
-    return null;
+  if (!score || typeof home === 'string' || typeof away === 'string') return null;
   if (score.home === score.away) return score.home >= 0 ? away : null;
   return score.home > score.away ? away : home;
 }
@@ -96,72 +73,38 @@ export function computeStandings(predictions: Prediction) {
     rows.forEach((row) => {
       row.gd = row.gf - row.ga;
     });
-    standings[group] = rows.sort(
-      (a, b) =>
-        b.points - a.points ||
-        b.gd - a.gd ||
-        b.gf - a.gf ||
-        a.team.seed - b.team.seed,
-    );
+    standings[group] = rows.sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.team.seed - b.team.seed);
   }
   return standings;
 }
 
 export function groupComplete(group: string, predictions: Prediction) {
-  return groupMatches
-    .filter((match) => match.group === group)
-    .every((match) => scoreOf(predictions[match.id]));
+  return groupMatches.filter((match) => match.group === group).every((match) => scoreOf(predictions[match.id]));
 }
 
-function thirdPlaceRows(
-  standings: Record<string, Standing[]>,
-  candidateGroups: string[],
-  usedTeamIds: Set<string>,
-) {
+function thirdPlaceRows(standings: Record<string, Standing[]>, candidateGroups: string[], usedTeamIds: Set<string>) {
   return candidateGroups
     .map((group) => standings[group]?.[2])
-    .filter(
-      (row): row is Standing => Boolean(row) && !usedTeamIds.has(row.team.id),
-    )
-    .sort(
-      (a, b) =>
-        b.points - a.points ||
-        b.gd - a.gd ||
-        b.gf - a.gf ||
-        a.team.seed - b.team.seed,
-    );
+    .filter((row): row is Standing => Boolean(row) && !usedTeamIds.has(row.team.id))
+    .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.team.seed - b.team.seed);
 }
 
-export function buildResolver(
-  predictions: Prediction,
-  standings: Record<string, Standing[]>,
-) {
+export function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>) {
   const winners: Record<string, Team> = {};
   const losers: Record<string, Team> = {};
   const thirdSlots: Record<string, Team> = {};
   const usedThirdPlaceTeamIds = new Set<string>();
   const resolver = (ref: string): Team | string => {
     if (teamMap[ref]) return teamMap[ref];
-    if (ref.startsWith("W:"))
-      return (
-        winners[ref.slice(2)] ??
-        `Thắng ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`
-      );
-    if (ref.startsWith("L:"))
-      return (
-        losers[ref.slice(2)] ??
-        `Thua ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`
-      );
+    if (ref.startsWith('W:'))
+      return winners[ref.slice(2)] ?? `Thắng ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
+    if (ref.startsWith('L:'))
+      return losers[ref.slice(2)] ?? `Thua ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
     if (/^3[A-L]+$/.test(ref)) {
       if (thirdSlots[ref]) return thirdSlots[ref];
-      const candidateGroups = ref.slice(1).split("");
-      if (!candidateGroups.every((group) => groupComplete(group, predictions)))
-        return `Đội hạng ba (${ref.slice(1)})`;
-      const [bestThird] = thirdPlaceRows(
-        standings,
-        candidateGroups,
-        usedThirdPlaceTeamIds,
-      );
+      const candidateGroups = ref.slice(1).split('');
+      if (!candidateGroups.every((group) => groupComplete(group, predictions))) return `Đội hạng ba (${ref.slice(1)})`;
+      const [bestThird] = thirdPlaceRows(standings, candidateGroups, usedThirdPlaceTeamIds);
       if (!bestThird) return `Đội hạng ba (${ref.slice(1)})`;
       thirdSlots[ref] = bestThird.team;
       usedThirdPlaceTeamIds.add(bestThird.team.id);
@@ -185,20 +128,16 @@ export function buildResolver(
 }
 
 export function encodePrediction(predictions: Prediction) {
-  const compact = Object.fromEntries(
-    Object.entries(predictions).filter(
-      ([, score]) => score.home !== null && score.away !== null,
-    ),
-  );
+  const compact = Object.fromEntries(Object.entries(predictions).filter(([, score]) => score.home !== null && score.away !== null));
   return btoa(encodeURIComponent(JSON.stringify(compact)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 export function decodePrediction(hash: string): Prediction {
   try {
-    const raw = hash.replace(/^#p=/, "").replace(/-/g, "+").replace(/_/g, "/");
+    const raw = hash.replace(/^#p=/, '').replace(/-/g, '+').replace(/_/g, '/');
     return JSON.parse(decodeURIComponent(atob(raw)));
   } catch {
     return {};
@@ -206,13 +145,12 @@ export function decodePrediction(hash: string): Prediction {
 }
 
 const kickoffFormatter = new Intl.DateTimeFormat(undefined, {
-  weekday: "short",
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZoneName: "short",
+  weekday: 'short',
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
 });
 
 export function formatKickoff(kickoff: string) {
@@ -248,7 +186,7 @@ export function buildDefaultPredictions(): Prediction {
     const resolver = buildResolver(predictions, standings);
     const home = resolver(match.homeRef);
     const away = resolver(match.awayRef);
-    if (typeof home !== "string" && typeof away !== "string") {
+    if (typeof home !== 'string' && typeof away !== 'string') {
       predictions[match.id] = predictedScore(home, away, true);
     }
   });
