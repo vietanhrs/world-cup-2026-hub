@@ -1,5 +1,6 @@
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
+import { Button, Group, Modal, Stack, Text } from '@mantine/core';
+import { IconTrash } from '@tabler/icons-react';
+import { useI18n } from '../i18n';
 
 type ClearPredictionsModalProps = {
   opened: boolean;
@@ -7,32 +8,19 @@ type ClearPredictionsModalProps = {
   onConfirm: () => void;
 };
 
-export function ClearPredictionsModal({
-  opened,
-  onClose,
-  onConfirm,
-}: ClearPredictionsModalProps) {
+export function ClearPredictionsModal({ opened, onClose, onConfirm }: ClearPredictionsModalProps) {
+  const { t } = useI18n();
+
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Xóa toàn bộ prediction?"
-      centered
-    >
+    <Modal opened={opened} onClose={onClose} title={t('modal.clearTitle')} centered>
       <Stack>
-        <Text size="sm">
-          Tất cả tỉ số đang điền sẽ bị xóa khỏi màn hình hiện tại.
-        </Text>
+        <Text size="sm">{t('modal.clearDescription')}</Text>
         <Group justify="end">
           <Button variant="default" onClick={onClose}>
-            Hủy
+            {t('common.cancel')}
           </Button>
-          <Button
-            color="red"
-            leftSection={<IconTrash size={16} />}
-            onClick={onConfirm}
-          >
-            Clear all
+          <Button color="red" leftSection={<IconTrash size={16} />} onClick={onConfirm}>
+            {t('common.clearAll')}
           </Button>
         </Group>
       </Stack>

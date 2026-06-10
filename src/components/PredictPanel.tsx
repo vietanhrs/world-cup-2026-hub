@@ -1,6 +1,7 @@
 import { SegmentedControl, SimpleGrid, Title } from '@mantine/core';
 import { groupMatches, knockoutMatches } from '../data/schedule';
 import { groupKeys } from '../data/groups';
+import { useI18n } from '../i18n';
 import { MatchCard } from './MatchCard';
 import type { Prediction, Team } from '../types';
 
@@ -14,13 +15,15 @@ type PredictPanelProps = {
 };
 
 export function PredictPanel({ activeGroup, predictions, resolver, onActiveGroupChange, onScore, onRoster }: PredictPanelProps) {
+  const { t } = useI18n();
+
   return (
     <>
       <SegmentedControl
         value={activeGroup}
         onChange={onActiveGroupChange}
         data={groupKeys.map((group) => ({
-          label: `Bảng ${group}`,
+          label: t('common.group', { group }),
           value: group,
         }))}
         className="group-switch"
@@ -41,7 +44,7 @@ export function PredictPanel({ activeGroup, predictions, resolver, onActiveGroup
           ))}
       </div>
       <Title order={3} mt="xl" mb="md">
-        Playoff / Knockout
+        {t('predict.knockout')}
       </Title>
       <SimpleGrid cols={{ base: 1, md: 2, xl: 4 }} spacing="md">
         {knockoutMatches.map((match) => (

@@ -1,5 +1,6 @@
 import { ActionIcon, AppShell, Box, Group, SegmentedControl, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme } from '@mantine/core';
 import {
+  IconArrowsShuffle,
   IconDeviceDesktop,
   IconMoon,
   IconPlayerPause,
@@ -7,18 +8,20 @@ import {
   IconPlayerSkipBack,
   IconPlayerSkipForward,
   IconPlayerStop,
-  IconRepeat,
   IconRepeatOnce,
+  IconRepeat,
   IconShare3,
-  IconArrowsShuffle,
   IconSun,
   IconTrash,
   IconTrophy,
 } from '@tabler/icons-react';
+import { useI18n, type Language } from '../i18n';
 
 type RepeatMode = 'one' | 'all';
 
 type AppHeaderProps = {
+  language: Language;
+  onLanguageChange: (language: Language) => void;
   currentTrackTitle: string;
   isMusicPlaying: boolean;
   hasMusicTracks: boolean;
@@ -35,6 +38,8 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({
+  language,
+  onLanguageChange,
   currentTrackTitle,
   isMusicPlaying,
   hasMusicTracks,
@@ -50,6 +55,7 @@ export function AppHeader({
   onClear,
 }: AppHeaderProps) {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const { t } = useI18n();
 
   return (
     <AppShell.Header className="topbar">
@@ -61,7 +67,7 @@ export function AppHeader({
           <Box>
             <Title order={2}>World Cup 2026 Hub</Title>
             <Text size="sm" c="dimmed" className="topbar-subtitle">
-              Group table · knockout bracket · roster board
+              {t('app.subtitle')}
             </Text>
           </Box>
         </Group>
@@ -75,7 +81,7 @@ export function AppHeader({
               {
                 value: 'dark',
                 label: (
-                  <Tooltip label="Dark">
+                  <Tooltip label={t('header.theme.dark')}>
                     <IconMoon size={16} />
                   </Tooltip>
                 ),
@@ -83,7 +89,7 @@ export function AppHeader({
               {
                 value: 'light',
                 label: (
-                  <Tooltip label="Light">
+                  <Tooltip label={t('header.theme.light')}>
                     <IconSun size={16} />
                   </Tooltip>
                 ),
@@ -91,45 +97,55 @@ export function AppHeader({
               {
                 value: 'auto',
                 label: (
-                  <Tooltip label="System">
+                  <Tooltip label={t('header.theme.system')}>
                     <IconDeviceDesktop size={16} />
                   </Tooltip>
                 ),
               },
             ]}
           />
-          <Tooltip label="Share prediction">
+          <SegmentedControl
+            className="language-switcher"
+            size="xs"
+            value={language}
+            onChange={(value) => onLanguageChange(value as Language)}
+            data={[
+              { value: 'en-US', label: '🇺🇸 EN' },
+              { value: 'vi-VN', label: '🇻🇳 VI' },
+            ]}
+          />
+          <Tooltip label={t('header.share')}>
             <ActionIcon variant="light" size="lg" onClick={onShare}>
               <IconShare3 size={18} />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label="Clear all predictions">
+          <Tooltip label={t('header.clear')}>
             <ActionIcon variant="light" color="red" size="lg" onClick={onClear}>
               <IconTrash size={18} />
             </ActionIcon>
           </Tooltip>
           <Group gap={4} className="music-player" wrap="nowrap">
-            <Tooltip label="Previous track">
+            <Tooltip label={t('music.previous')}>
               <ActionIcon variant="light" size="lg" onClick={onMusicPrevious} disabled={!hasMusicTracks}>
                 <IconPlayerSkipBack size={17} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label={isMusicPlaying ? 'Pause' : 'Start / Resume'}>
+            <Tooltip label={isMusicPlaying ? t('music.pause') : t('music.play')}>
               <ActionIcon variant="filled" size="lg" color="green" onClick={onMusicToggle} disabled={!hasMusicTracks}>
                 {isMusicPlaying ? <IconPlayerPause size={17} /> : <IconPlayerPlay size={17} />}
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Stop">
+            <Tooltip label={t('music.stop')}>
               <ActionIcon variant="light" size="lg" onClick={onMusicStop} disabled={!hasMusicTracks}>
                 <IconPlayerStop size={17} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Next track">
+            <Tooltip label={t('music.next')}>
               <ActionIcon variant="light" size="lg" onClick={onMusicNext} disabled={!hasMusicTracks}>
                 <IconPlayerSkipForward size={17} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label={repeatMode === 'one' ? 'Repeat one' : 'Repeat all'}>
+            <Tooltip label={repeatMode === 'one' ? t('music.repeatOne') : t('music.repeatAll')}>
               <ActionIcon
                 className="music-mode-button"
                 variant={repeatMode === 'one' ? 'filled' : 'light'}
@@ -137,12 +153,12 @@ export function AppHeader({
                 size="lg"
                 onClick={onRepeatToggle}
                 disabled={!hasMusicTracks}
-                aria-label={repeatMode === 'one' ? 'Repeat one' : 'Repeat all'}
+                aria-label={repeatMode === 'one' ? t('music.repeatOne') : t('music.repeatAll')}
               >
                 {repeatMode === 'one' ? <IconRepeatOnce size={17} /> : <IconRepeat size={17} />}
               </ActionIcon>
             </Tooltip>
-            <Tooltip label={shuffleEnabled ? 'Shuffle on' : 'Shuffle off'}>
+            <Tooltip label={shuffleEnabled ? t('music.shuffleOn') : t('music.shuffleOff')}>
               <ActionIcon
                 className="music-mode-button"
                 variant={shuffleEnabled ? 'filled' : 'light'}
@@ -150,7 +166,7 @@ export function AppHeader({
                 size="lg"
                 onClick={onShuffleToggle}
                 disabled={!hasMusicTracks}
-                aria-label={shuffleEnabled ? 'Shuffle on' : 'Shuffle off'}
+                aria-label={shuffleEnabled ? t('music.shuffleOn') : t('music.shuffleOff')}
               >
                 <IconArrowsShuffle size={17} />
               </ActionIcon>

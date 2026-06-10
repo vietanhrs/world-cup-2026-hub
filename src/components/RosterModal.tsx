@@ -1,15 +1,8 @@
-import {
-  Card,
-  Group,
-  Modal,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
-import { IconFlag, IconShield, IconUsersGroup } from "@tabler/icons-react";
-import { PitchBoard } from "./PitchBoard";
-import type { Team } from "../types";
+import { Card, Group, Modal, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core';
+import { IconFlag, IconShield, IconUsersGroup } from '@tabler/icons-react';
+import { useI18n } from '../i18n';
+import { PitchBoard } from './PitchBoard';
+import type { RosterRole, Team } from '../types';
 
 type RosterModalProps = {
   team: Team | null;
@@ -17,13 +10,10 @@ type RosterModalProps = {
 };
 
 export function RosterModal({ team, onClose }: RosterModalProps) {
+  const { t, rosterRoleLabel } = useI18n();
+
   return (
-    <Modal
-      opened={!!team}
-      onClose={onClose}
-      title={team ? `${team.name} roster` : ""}
-      size="xl"
-    >
+    <Modal opened={!!team} onClose={onClose} title={team ? t('roster.title', { team: team.name }) : ''} size="xl">
       {team && (
         <Stack>
           <Group>
@@ -32,10 +22,10 @@ export function RosterModal({ team, onClose }: RosterModalProps) {
             </ThemeIcon>
             <Stack gap={0}>
               <Text fw={700}>
-                Bảng {team.group} · {team.code}
+                {team.flag} {t('common.group', { group: team.group })} · {team.code}
               </Text>
               <Text size="xs" c="dimmed">
-                Current squad · fetched {team.rosterFetchedAt}
+                {t('roster.currentSquad', { date: team.rosterFetchedAt })}
               </Text>
             </Stack>
           </Group>
@@ -46,7 +36,7 @@ export function RosterModal({ team, onClose }: RosterModalProps) {
                   <Card withBorder key={role} className="roster-card">
                     <Group mb="xs">
                       <IconUsersGroup size={16} />
-                      <Text fw={700}>{role}</Text>
+                      <Text fw={700}>{rosterRoleLabel(role as RosterRole)}</Text>
                     </Group>
                     <Stack gap={4}>
                       {players.map((player) => (
@@ -61,19 +51,11 @@ export function RosterModal({ team, onClose }: RosterModalProps) {
               <Card withBorder className="xi-card">
                 <Group mb="xs">
                   <IconShield size={16} />
-                  <Text fw={700}>Đội hình mạnh nhất dự kiến</Text>
+                  <Text fw={700}>{t('roster.bestXi')}</Text>
                 </Group>
-                <Text size="sm">{team.xi.join(" · ")}</Text>
-                <Text
-                  component="a"
-                  href={team.rosterSource}
-                  target="_blank"
-                  rel="noreferrer"
-                  size="xs"
-                  c="dimmed"
-                  mt="xs"
-                >
-                  Source: Wikipedia current squad
+                <Text size="sm">{team.xi.join(' · ')}</Text>
+                <Text component="a" href={team.rosterSource} target="_blank" rel="noreferrer" size="xs" c="dimmed" mt="xs">
+                  {t('common.source')}
                 </Text>
               </Card>
             </Stack>

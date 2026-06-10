@@ -33,9 +33,14 @@
   max-width: 100%;
 }
 
-.theme-switcher label {
+.theme-switcher label,
+.language-switcher label {
   display: grid;
   place-items: center;
+}
+
+.language-switcher {
+  flex: 0 0 auto;
 }
 
 .music-player {
@@ -202,12 +207,12 @@
   width: 48px;
 }
 
-.team-dot {
+.team-flag {
   display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16);
+  min-width: 16px;
+  font-size: 15px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.26));
 }
 
 .qualified-row {
@@ -257,9 +262,9 @@
   font-size: 11px;
 }
 
-.standings-table .team-dot {
-  width: 7px;
-  height: 7px;
+.standings-table .team-flag {
+  min-width: 13px;
+  font-size: 12px;
 }
 
 .playoff-center {
@@ -327,9 +332,9 @@
   font-size: 11px;
 }
 
-.bracket-card .team-dot {
-  width: 7px;
-  height: 7px;
+.bracket-card .team-flag {
+  min-width: 13px;
+  font-size: 12px;
 }
 
 .winner-row {

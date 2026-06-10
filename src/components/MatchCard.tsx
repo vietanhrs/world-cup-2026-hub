@@ -1,4 +1,5 @@
 import { Card, Group, NumberInput, Text } from '@mantine/core';
+import { useI18n } from '../i18n';
 import { formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, PredictionScore, Team } from '../types';
@@ -13,10 +14,12 @@ type MatchCardProps = {
 };
 
 export function MatchCard({ match, prediction, resolver, onScore, onRoster, variant = 'group' }: MatchCardProps) {
+  const { language, matchLabel } = useI18n();
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
   const hasTeams = typeof home !== 'string' && typeof away !== 'string';
-  const meta = variant === 'knockout' ? `${match.label} · ${formatKickoff(match.kickoff)}` : formatKickoff(match.kickoff);
+  const meta =
+    variant === 'knockout' ? `${matchLabel(match)} · ${formatKickoff(match.kickoff, language)}` : formatKickoff(match.kickoff, language);
 
   return (
     <Card className={`match-card match-card-${variant}`} withBorder>

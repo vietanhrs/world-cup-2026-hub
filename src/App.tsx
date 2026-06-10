@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppShell, MantineProvider, Tabs } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
 import { IconChartBar, IconPencil } from '@tabler/icons-react';
@@ -9,6 +9,7 @@ import { HeroSection } from './components/HeroSection';
 import { PredictPanel } from './components/PredictPanel';
 import { ResultsPanel } from './components/ResultsPanel';
 import { RosterModal } from './components/RosterModal';
+import { useI18n, type Language } from './i18n';
 import { theme } from './theme';
 import {
   buildDefaultPredictions,
@@ -64,6 +65,7 @@ function normalizeTracks(rawTracks: unknown): MusicTrack[] {
 }
 
 function App() {
+  const { language, setLanguage, t, matchLabel } = useI18n();
   const [predictions, setPredictions] = useState<Prediction>(() =>
     window.location.hash.startsWith('#p=') ? decodePrediction(window.location.hash) : buildDefaultPredictions(),
   );
@@ -82,7 +84,17 @@ function App() {
   const shuffleEnabledRef = useRef(false);
 
   const standings = useMemo(() => computeStandings(predictions), [predictions]);
-  const resolver = useMemo(() => buildResolver(predictions, standings), [predictions, standings]);
+  const resolver = useMemo(
+    () =>
+      buildResolver(predictions, standings, {
+        winner: (match) => t('resolver.winner', { match: typeof match === 'string' ? match : matchLabel(match) }),
+        loser: (match) => t('resolver.loser', { match: typeof match === 'string' ? match : matchLabel(match) }),
+        third: (groups) => t('resolver.third', { groups }),
+        groupWinner: (group) => t('resolver.groupWinner', { group }),
+        groupRunnerUp: (group) => t('resolver.groupRunnerUp', { group }),
+      }),
+    [matchLabel, predictions, standings, t],
+  );
   const completed = predictionProgress(predictions);
   const total = allMatches.length;
   const champion = resolver('W:final-1');
@@ -142,40 +154,43 @@ function App() {
     void loadTracks();
   }, []);
 
-  const playTrack = async (nextTrackIndex = currentTrackIndexRef.current) => {
-    const tracks = musicTracksRef.current;
-    const nextTrack = tracks[nextTrackIndex];
-    if (!nextTrack || !audioRef.current) {
-      notifications.show({
-        color: 'yellow',
-        title: 'Không có track nhạc',
-        message: 'Chưa tìm thấy file nhạc trong thư mục /media.',
-      });
-      return;
-    }
+  const playTrack = useCallback(
+    async (nextTrackIndex = currentTrackIndexRef.current) => {
+      const tracks = musicTracksRef.current;
+      const nextTrack = tracks[nextTrackIndex];
+      if (!nextTrack || !audioRef.current) {
+        notifications.show({
+          color: 'yellow',
+          title: t('notify.noMusicTitle'),
+          message: t('notify.noMusicMessage'),
+        });
+        return;
+      }
 
-    const audio = audioRef.current;
-    const nextSrc = new URL(nextTrack.src, window.location.origin).href;
-    if (audio.src !== nextSrc) {
-      audio.src = nextTrack.src;
-      audio.load();
-    }
+      const audio = audioRef.current;
+      const nextSrc = new URL(nextTrack.src, window.location.origin).href;
+      if (audio.src !== nextSrc) {
+        audio.src = nextTrack.src;
+        audio.load();
+      }
 
-    try {
-      await audio.play();
-      setCurrentTrackIndex(nextTrackIndex);
-      setIsMusicPlaying(true);
-    } catch {
-      setIsMusicPlaying(false);
-      notifications.show({
-        color: 'yellow',
-        title: 'Không phát được nhạc',
-        message: `Không mở được ${nextTrack.src}.`,
-      });
-    }
-  };
+      try {
+        await audio.play();
+        setCurrentTrackIndex(nextTrackIndex);
+        setIsMusicPlaying(true);
+      } catch {
+        setIsMusicPlaying(false);
+        notifications.show({
+          color: 'yellow',
+          title: t('notify.musicErrorTitle'),
+          message: t('notify.musicErrorMessage', { src: nextTrack.src }),
+        });
+      }
+    },
+    [t],
+  );
 
-  const getNextTrackIndex = (direction: 1 | -1) => {
+  const getNextTrackIndex = useCallback((direction: 1 | -1) => {
     const tracks = musicTracksRef.current;
     if (tracks.length === 0) return 0;
     if (shuffleEnabledRef.current && tracks.length > 1) {
@@ -183,7 +198,7 @@ function App() {
       return nextIndexes[Math.floor(Math.random() * nextIndexes.length)];
     }
     return (currentTrackIndexRef.current + direction + tracks.length) % tracks.length;
-  };
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -208,7 +223,7 @@ function App() {
 
     audio.addEventListener('ended', onEnded);
     return () => audio.removeEventListener('ended', onEnded);
-  }, []);
+  }, [getNextTrackIndex, playTrack]);
 
   const toggleMusic = () => {
     if (isMusicPlaying) {
@@ -263,8 +278,8 @@ function App() {
     await navigator.clipboard.writeText(url);
     notifications.show({
       color: 'green',
-      title: 'Đã copy link share',
-      message: 'Người khác mở link sẽ thấy prediction hiện tại.',
+      title: t('notify.shareTitle'),
+      message: t('notify.shareMessage'),
     });
   };
 
@@ -274,8 +289,8 @@ function App() {
     window.history.replaceState(null, '', `${window.location.origin}${window.location.pathname}`);
     notifications.show({
       color: 'yellow',
-      title: 'Đã xóa prediction',
-      message: 'Tất cả tỉ số đã được đưa về trống.',
+      title: t('notify.clearTitle'),
+      message: t('notify.clearMessage'),
     });
   };
 
@@ -284,7 +299,9 @@ function App() {
       <Notifications position="top-right" />
       <AppShell className="app-shell" header={{ height: { base: 118, sm: 118, md: 74 } }} padding="md">
         <AppHeader
-          currentTrackTitle={currentTrack?.title ?? 'No media tracks'}
+          language={language}
+          onLanguageChange={(value) => setLanguage(value as Language)}
+          currentTrackTitle={currentTrack?.title ?? t('music.noTracks')}
           isMusicPlaying={isMusicPlaying}
           hasMusicTracks={musicTracks.length > 0}
           repeatMode={repeatMode}
@@ -304,10 +321,10 @@ function App() {
           <Tabs defaultValue="predict" className="main-tabs">
             <Tabs.List>
               <Tabs.Tab value="predict" leftSection={<IconPencil size={16} />}>
-                Điền tỉ số
+                {t('tabs.predict')}
               </Tabs.Tab>
               <Tabs.Tab value="results" leftSection={<IconChartBar size={16} />}>
-                Kết quả prediction
+                {t('tabs.results')}
               </Tabs.Tab>
             </Tabs.List>
 

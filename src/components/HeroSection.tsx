@@ -1,14 +1,8 @@
-import {
-  Badge,
-  Card,
-  Group,
-  Progress,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { IconCrown, IconSparkles } from "@tabler/icons-react";
-import type { Team } from "../types";
+import { Badge, Card, Group, Progress, Text, ThemeIcon, Title } from '@mantine/core';
+import { IconCrown, IconSparkles } from '@tabler/icons-react';
+import { TeamBadge } from './TeamBadge';
+import { useI18n } from '../i18n';
+import type { Team } from '../types';
 
 type HeroSectionProps = {
   completed: number;
@@ -17,23 +11,22 @@ type HeroSectionProps = {
 };
 
 export function HeroSection({ completed, total, champion }: HeroSectionProps) {
+  const { t } = useI18n();
+
   return (
     <section className="hero">
       <div>
         <Badge color="green" leftSection={<IconSparkles size={12} />}>
-          World Cup 2026 · three-host edition
+          {t('hero.badge')}
         </Badge>
-        <Title className="hero-title">
-          Dự đoán tỉ số, xem bảng điểm và tự dựng nhánh vô địch.
-        </Title>
+        <Title className="hero-title">{t('hero.title')}</Title>
         <Text c="dimmed" maw={760}>
-          Điền dần từng trận, chỉnh lại bất cứ lúc nào, xem kết quả group stage
-          hoặc playoff ngay cả khi prediction còn dang dở.
+          {t('hero.description')}
         </Text>
       </div>
       <Card className="progress-card" withBorder>
         <Group justify="space-between">
-          <Text fw={700}>Prediction progress</Text>
+          <Text fw={700}>{t('hero.progress')}</Text>
           <Badge color="green">
             {completed}/{total}
           </Badge>
@@ -43,9 +36,8 @@ export function HeroSection({ completed, total, champion }: HeroSectionProps) {
           <ThemeIcon color="yellow" variant="light">
             <IconCrown size={18} />
           </ThemeIcon>
-          <Text size="sm">
-            Champion: {typeof champion === "string" ? champion : champion.name}
-          </Text>
+          <Text size="sm">{t('hero.champion')}:</Text>
+          <TeamBadge value={champion} />
         </Group>
       </Card>
     </section>

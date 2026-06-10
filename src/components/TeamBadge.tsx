@@ -22,7 +22,11 @@ export function TeamBadge({ value, onOpen }: TeamBadgeProps) {
         variant="subtle"
         size="compact-sm"
         onClick={() => onOpen?.(value)}
-        leftSection={<span className="team-dot" style={{ background: value.color }} />}
+        leftSection={
+          <span className="team-flag" role="img" aria-label={`${value.name} flag`}>
+            {value.flag}
+          </span>
+        }
       >
         {value.code}
       </Button>

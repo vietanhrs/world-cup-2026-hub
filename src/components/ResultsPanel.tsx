@@ -1,6 +1,7 @@
 import { Badge, Card, Group, ScrollArea, Table, Text, Title } from '@mantine/core';
 import { knockoutMatches } from '../data/schedule';
 import { groupKeys } from '../data/groups';
+import { useI18n } from '../i18n';
 import { groupComplete } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, Prediction, Standing, Team } from '../types';
@@ -165,25 +166,26 @@ const bracketLinePaths = knockoutMatches.flatMap((match) =>
 );
 
 export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
+  const { t, matchLabel } = useI18n();
   const leftGroups = groupKeys.slice(0, 6);
   const rightGroups = groupKeys.slice(6);
 
   const renderStandingCard = (group: string) => (
     <Card key={group} withBorder className="standings-card">
       <Group justify="space-between" mb={6}>
-        <Title order={5}>Bảng {group}</Title>
+        <Title order={5}>{t('common.group', { group })}</Title>
         <Badge size="xs" color={groupComplete(group, predictions) ? 'green' : 'gray'}>
-          {groupComplete(group, predictions) ? 'Đủ trận' : 'Đang dự đoán'}
+          {groupComplete(group, predictions) ? t('results.groupComplete') : t('results.groupInProgress')}
         </Badge>
       </Group>
       <Table.ScrollContainer minWidth={168}>
         <Table verticalSpacing={3} horizontalSpacing={4} className="standings-table">
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Team</Table.Th>
-              <Table.Th>Pts</Table.Th>
-              <Table.Th>P</Table.Th>
-              <Table.Th>GD</Table.Th>
+              <Table.Th>{t('results.team')}</Table.Th>
+              <Table.Th>{t('results.points')}</Table.Th>
+              <Table.Th>{t('results.played')}</Table.Th>
+              <Table.Th>{t('results.goalDifference')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -218,7 +220,7 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
         style={{ gridColumn: slot.col, gridRow: `${slot.row} / span 2` }}
       >
         <Text size="xs" c="dimmed">
-          {match.label}
+          {matchLabel(match)}
         </Text>
         <Group justify="space-between" className={`bracket-team-row ${homeWon ? 'winner-row' : ''}`}>
           <TeamBadge value={home} onOpen={onRoster} />
@@ -239,7 +241,7 @@ export function ResultsPanel({ predictions, standings, resolver, onRoster }: Res
           <div className="standings-side standings-side-left">{leftGroups.map(renderStandingCard)}</div>
           <section className="playoff-center">
             <Title order={3} mb="md" ta="center">
-              Nhánh playoff
+              {t('results.bracket')}
             </Title>
             <div className="bracket">
               <svg className="bracket-lines" viewBox={`0 0 ${bracketViewBox.width} ${bracketViewBox.height}`} aria-hidden="true">

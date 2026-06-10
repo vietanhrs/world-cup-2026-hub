@@ -3,6 +3,22 @@ import { groupKeys, groups, teamMap } from '../data/groups';
 import { hostBonus, teamStrengths } from '../data/teamStrengths';
 import type { Match, Prediction, PredictionScore, Standing, Team } from '../types';
 
+type ResolverLabels = {
+  winner: (match: Match | string) => string;
+  loser: (match: Match | string) => string;
+  third: (groups: string) => string;
+  groupWinner: (group: string) => string;
+  groupRunnerUp: (group: string) => string;
+};
+
+const defaultResolverLabels: ResolverLabels = {
+  winner: (match) => `Winner of ${typeof match === 'string' ? match : match.label}`,
+  loser: (match) => `Loser of ${typeof match === 'string' ? match : match.label}`,
+  third: (groups) => `Third-place team (${groups})`,
+  groupWinner: (group) => `Group ${group} winner`,
+  groupRunnerUp: (group) => `Group ${group} runner-up`,
+};
+
 export function scoreOf(prediction?: PredictionScore): { home: number; away: number } | null {
   if (prediction?.home === null || prediction?.away === null || prediction?.home === undefined || prediction?.away === undefined)
     return null;
@@ -89,7 +105,7 @@ function thirdPlaceRows(standings: Record<string, Standing[]>, candidateGroups: 
     .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.team.seed - b.team.seed);
 }
 
-export function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>) {
+export function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>, labels = defaultResolverLabels) {
   const winners: Record<string, Team> = {};
   const losers: Record<string, Team> = {};
   const thirdSlots: Record<string, Team> = {};
@@ -97,15 +113,15 @@ export function buildResolver(predictions: Prediction, standings: Record<string,
   const resolver = (ref: string): Team | string => {
     if (teamMap[ref]) return teamMap[ref];
     if (ref.startsWith('W:'))
-      return winners[ref.slice(2)] ?? `Thắng ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
+      return winners[ref.slice(2)] ?? labels.winner(knockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
     if (ref.startsWith('L:'))
-      return losers[ref.slice(2)] ?? `Thua ${knockoutMatches.find((match) => match.id === ref.slice(2))?.label ?? ref.slice(2)}`;
+      return losers[ref.slice(2)] ?? labels.loser(knockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
     if (/^3[A-L]+$/.test(ref)) {
       if (thirdSlots[ref]) return thirdSlots[ref];
       const candidateGroups = ref.slice(1).split('');
-      if (!candidateGroups.every((group) => groupComplete(group, predictions))) return `Đội hạng ba (${ref.slice(1)})`;
+      if (!candidateGroups.every((group) => groupComplete(group, predictions))) return labels.third(ref.slice(1));
       const [bestThird] = thirdPlaceRows(standings, candidateGroups, usedThirdPlaceTeamIds);
-      if (!bestThird) return `Đội hạng ba (${ref.slice(1)})`;
+      if (!bestThird) return labels.third(ref.slice(1));
       thirdSlots[ref] = bestThird.team;
       usedThirdPlaceTeamIds.add(bestThird.team.id);
       return bestThird.team;
@@ -114,7 +130,7 @@ export function buildResolver(predictions: Prediction, standings: Record<string,
       const rank = Number(ref[0]) - 1;
       const group = ref[1];
       if (groupComplete(group, predictions)) return standings[group][rank].team;
-      return rank === 0 ? `Nhất bảng ${group}` : `Nhì bảng ${group}`;
+      return rank === 0 ? labels.groupWinner(group) : labels.groupRunnerUp(group);
     }
     return ref;
   };
@@ -144,17 +160,17 @@ export function decodePrediction(hash: string): Prediction {
   }
 }
 
-const kickoffFormatter = new Intl.DateTimeFormat(undefined, {
+const kickoffFormatOptions: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   day: '2-digit',
   month: 'short',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 
-export function formatKickoff(kickoff: string) {
-  return kickoffFormatter.format(new Date(kickoff));
+export function formatKickoff(kickoff: string, locale?: string) {
+  return new Intl.DateTimeFormat(locale, kickoffFormatOptions).format(new Date(kickoff));
 }
 
 function adjustedStrength(team: Team) {
