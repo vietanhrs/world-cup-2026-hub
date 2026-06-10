@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppShell, MantineProvider, Tabs } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
-import { IconChartBar, IconPencil } from '@tabler/icons-react';
+import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
 import { allMatches } from './data/schedule';
 import { AppHeader } from './components/AppHeader';
 import { ClearPredictionsModal } from './components/ClearPredictionsModal';
@@ -9,6 +9,7 @@ import { HeroSection } from './components/HeroSection';
 import { PredictPanel } from './components/PredictPanel';
 import { ResultsPanel } from './components/ResultsPanel';
 import { RosterModal } from './components/RosterModal';
+import { SchedulePanel } from './components/SchedulePanel';
 import { useI18n, type Language } from './i18n';
 import { theme } from './theme';
 import {
@@ -323,6 +324,9 @@ function App() {
               <Tabs.Tab value="predict" leftSection={<IconPencil size={16} />}>
                 {t('tabs.predict')}
               </Tabs.Tab>
+              <Tabs.Tab value="schedule" leftSection={<IconCalendarEvent size={16} />}>
+                {t('tabs.schedule')}
+              </Tabs.Tab>
               <Tabs.Tab value="results" leftSection={<IconChartBar size={16} />}>
                 {t('tabs.results')}
               </Tabs.Tab>
@@ -337,6 +341,10 @@ function App() {
                 onScore={onScore}
                 onRoster={setSelectedTeam}
               />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="schedule" pt="md">
+              <SchedulePanel resolver={resolver} onRoster={setSelectedTeam} />
             </Tabs.Panel>
 
             <Tabs.Panel value="results" pt="md">
