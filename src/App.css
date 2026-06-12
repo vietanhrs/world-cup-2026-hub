@@ -170,7 +170,21 @@
 .score-input input {
   text-align: center;
   font-weight: 800;
-  padding-inline: 4px;
+  padding-inline: 4px 20px;
+}
+
+.score-input .mantine-NumberInput-controls {
+  width: 18px;
+}
+
+.score-input .mantine-NumberInput-control {
+  width: 18px;
+  min-height: 12px;
+}
+
+.score-input .mantine-NumberInput-control svg {
+  width: 8px;
+  height: 8px;
 }
 
 .team-button {
@@ -185,12 +199,12 @@
 }
 
 .match-card-group .match-row {
-  grid-template-columns: 48px 42px 42px 48px;
+  grid-template-columns: 48px 54px 54px 48px;
   gap: 4px;
 }
 
 .match-card-group .score-input {
-  width: 42px;
+  width: 54px;
 }
 
 .team-flag {

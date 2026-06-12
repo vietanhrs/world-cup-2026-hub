@@ -53,7 +53,7 @@ function ScoreInput({ value, disabled, onChange }: ScoreInputProps) {
       allowDecimal={false}
       allowNegative={false}
       clampBehavior="strict"
-      hideControls
+      rightSectionWidth={18}
       selectAllOnFocus
       value={draftValue}
       onChange={(nextValue) => {
