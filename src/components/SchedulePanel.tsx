@@ -1,7 +1,7 @@
 import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { groupMatches } from '../data/schedule';
 import { useI18n } from '../i18n';
-import { formatKickoff } from '../utils/predictions';
+import { actualResultOf, formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Team } from '../types';
 
@@ -27,9 +27,10 @@ export function SchedulePanel({ resolver, onRoster }: SchedulePanelProps) {
         {sortedGroupMatches.map((match) => {
           const home = resolver(match.homeRef);
           const away = resolver(match.awayRef);
+          const result = actualResultOf(match);
 
           return (
-            <Card key={match.id} className="schedule-card" withBorder>
+            <Card key={match.id} className={`schedule-card ${result ? 'schedule-card-completed' : ''}`} withBorder>
               <div className="schedule-time">
                 <Text size="sm" fw={800}>
                   {formatKickoff(match.kickoff, language)}
@@ -43,9 +44,15 @@ export function SchedulePanel({ resolver, onRoster }: SchedulePanelProps) {
               </Badge>
               <Group className="schedule-teams" justify="center" gap="xs" wrap="nowrap">
                 <TeamBadge value={home} onOpen={onRoster} />
-                <Text size="xs" fw={900} c="dimmed">
-                  {t('schedule.versus')}
-                </Text>
+                {result ? (
+                  <Badge className="schedule-score" variant="filled" color="green">
+                    {result.home}-{result.away} {result.status}
+                  </Badge>
+                ) : (
+                  <Text size="xs" fw={900} c="dimmed">
+                    {t('schedule.versus')}
+                  </Text>
+                )}
                 <TeamBadge value={away} onOpen={onRoster} />
               </Group>
             </Card>

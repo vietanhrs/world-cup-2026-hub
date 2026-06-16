@@ -33,6 +33,7 @@ type TranslationKey =
   | 'tabs.predict'
   | 'tabs.schedule'
   | 'tabs.results'
+  | 'predict.completed'
   | 'predict.knockout'
   | 'schedule.title'
   | 'schedule.description'
@@ -98,6 +99,7 @@ const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     'tabs.predict': 'Enter scores',
     'tabs.schedule': 'Group schedule',
     'tabs.results': 'Prediction results',
+    'predict.completed': 'FT',
     'predict.knockout': 'Playoff / Knockout',
     'schedule.title': 'Group-stage match schedule',
     'schedule.description': 'All group-stage fixtures sorted from earliest to latest kickoff.',
@@ -160,6 +162,7 @@ const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     'tabs.predict': 'Điền tỉ số',
     'tabs.schedule': 'Lịch thi đấu vòng bảng',
     'tabs.results': 'Kết quả dự đoán',
+    'predict.completed': 'Đã xong',
     'predict.knockout': 'Vòng loại trực tiếp',
     'schedule.title': 'Lịch thi đấu vòng bảng',
     'schedule.description': 'Toàn bộ trận vòng bảng, sắp từ giờ đá sớm nhất tới muộn nhất.',

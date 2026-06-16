@@ -18,7 +18,9 @@ import {
   computeStandings,
   decodePrediction,
   encodePrediction,
+  hasActualResult,
   predictionProgress,
+  withActualResults,
 } from './utils/predictions';
 import type { Prediction, Team } from './types';
 import '@mantine/core/styles.css';
@@ -84,19 +86,20 @@ function App() {
   const repeatModeRef = useRef<RepeatMode>('all');
   const shuffleEnabledRef = useRef(false);
 
-  const standings = useMemo(() => computeStandings(predictions), [predictions]);
+  const effectivePredictions = useMemo(() => withActualResults(predictions), [predictions]);
+  const standings = useMemo(() => computeStandings(effectivePredictions), [effectivePredictions]);
   const resolver = useMemo(
     () =>
-      buildResolver(predictions, standings, {
+      buildResolver(effectivePredictions, standings, {
         winner: (match) => t('resolver.winner', { match: typeof match === 'string' ? match : matchLabel(match) }),
         loser: (match) => t('resolver.loser', { match: typeof match === 'string' ? match : matchLabel(match) }),
         third: (groups) => t('resolver.third', { groups }),
         groupWinner: (group) => t('resolver.groupWinner', { group }),
         groupRunnerUp: (group) => t('resolver.groupRunnerUp', { group }),
       }),
-    [matchLabel, predictions, standings, t],
+    [effectivePredictions, matchLabel, standings, t],
   );
-  const completed = predictionProgress(predictions);
+  const completed = predictionProgress(effectivePredictions);
   const total = allMatches.length;
   const champion = resolver('W:final-1');
   const currentTrack = musicTracks[currentTrackIndex] ?? musicTracks[0] ?? null;
@@ -263,6 +266,9 @@ function App() {
   };
 
   const onScore = (id: string, side: 'home' | 'away', value: number | string | null) => {
+    const match = allMatches.find((candidate) => candidate.id === id);
+    if (match && hasActualResult(match)) return;
+
     const numberValue = typeof value === 'number' ? value : null;
     setPredictions((current) => ({
       ...current,
@@ -335,7 +341,7 @@ function App() {
             <Tabs.Panel value="predict" pt="md">
               <PredictPanel
                 activeGroup={activeGroup}
-                predictions={predictions}
+                predictions={effectivePredictions}
                 resolver={resolver}
                 onActiveGroupChange={setActiveGroup}
                 onScore={onScore}
@@ -348,7 +354,7 @@ function App() {
             </Tabs.Panel>
 
             <Tabs.Panel value="results" pt="md">
-              <ResultsPanel predictions={predictions} standings={standings} resolver={resolver} onRoster={setSelectedTeam} />
+              <ResultsPanel predictions={effectivePredictions} standings={standings} resolver={resolver} onRoster={setSelectedTeam} />
             </Tabs.Panel>
           </Tabs>
         </AppShell.Main>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, Group, NumberInput, Text } from '@mantine/core';
+import { Badge, Card, Group, NumberInput, Text } from '@mantine/core';
 import { useI18n } from '../i18n';
-import { formatKickoff } from '../utils/predictions';
+import { actualResultOf, formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, PredictionScore, Team } from '../types';
 
@@ -69,29 +69,45 @@ function ScoreInput({ value, disabled, onChange }: ScoreInputProps) {
 }
 
 export function MatchCard({ match, prediction, resolver, onScore, onRoster, variant = 'group' }: MatchCardProps) {
-  const { language, matchLabel } = useI18n();
+  const { language, matchLabel, t } = useI18n();
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
   const hasTeams = typeof home !== 'string' && typeof away !== 'string';
+  const actualResult = actualResultOf(match);
+  const displayedScore = actualResult ?? prediction;
+  const isCompleted = Boolean(actualResult);
   const meta =
     variant === 'knockout' ? `${matchLabel(match)} · ${formatKickoff(match.kickoff, language)}` : formatKickoff(match.kickoff, language);
 
   return (
-    <Card className={`match-card match-card-${variant}`} withBorder>
-      <Group justify="center" align="center">
+    <Card className={`match-card match-card-${variant} ${isCompleted ? 'match-card-completed' : ''}`} withBorder>
+      <Group justify="center" align="center" gap={6}>
         <Text size="xs" c="dimmed" ta="center" className="match-meta">
           {meta}
         </Text>
+        {isCompleted ? (
+          <Badge size="xs" color="green" variant="light" className="match-status-badge">
+            {t('predict.completed')}
+          </Badge>
+        ) : null}
       </Group>
       <div className="match-row">
         <div className="match-team match-team-home">
           <TeamBadge value={home} onOpen={onRoster} />
         </div>
         <div>
-          <ScoreInput value={prediction?.home} onChange={(value) => onScore(match.id, 'home', value)} disabled={!hasTeams} />
+          <ScoreInput
+            value={displayedScore?.home}
+            onChange={(value) => onScore(match.id, 'home', value)}
+            disabled={!hasTeams || isCompleted}
+          />
         </div>
         <div>
-          <ScoreInput value={prediction?.away} onChange={(value) => onScore(match.id, 'away', value)} disabled={!hasTeams} />
+          <ScoreInput
+            value={displayedScore?.away}
+            onChange={(value) => onScore(match.id, 'away', value)}
+            disabled={!hasTeams || isCompleted}
+          />
         </div>
         <div className="match-team match-team-away">
           <TeamBadge value={away} onOpen={onRoster} />
