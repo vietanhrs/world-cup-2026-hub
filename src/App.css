@@ -255,13 +255,14 @@
 
 .schedule-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .schedule-card {
   display: grid;
-  grid-template-columns: minmax(220px, 1.1fr) 96px minmax(220px, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 82px minmax(0, 1.15fr);
+  gap: 10px;
   align-items: center;
   min-height: 76px;
   padding: 12px 14px;
@@ -646,6 +647,10 @@
 
   .group-match-grid {
     grid-template-columns: repeat(6, 216px);
+  }
+
+  .schedule-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .schedule-card {
