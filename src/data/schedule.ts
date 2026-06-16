@@ -229,7 +229,7 @@ export const groupMatches: ScheduleMatch[] = [
     stage: 'group',
     label: 'Trận 20',
     group: 'J',
-    kickoff: '2026-06-16T04:00:00Z',
+    kickoff: '2026-06-17T04:00:00Z',
     venue: 'San Francisco Bay Area',
     homeRef: 'austria',
     awayRef: 'jordan',
