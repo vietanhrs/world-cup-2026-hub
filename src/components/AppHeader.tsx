@@ -115,12 +115,12 @@ export function AppHeader({
             ]}
           />
           <Tooltip label={t('header.share')}>
-            <ActionIcon variant="light" size="lg" onClick={onShare}>
+            <ActionIcon variant="light" size="lg" onClick={onShare} aria-label={t('header.share')}>
               <IconShare3 size={18} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('header.clear')}>
-            <ActionIcon variant="light" color="red" size="lg" onClick={onClear}>
+            <ActionIcon variant="light" color="red" size="lg" onClick={onClear} aria-label={t('header.clear')}>
               <IconTrash size={18} />
             </ActionIcon>
           </Tooltip>

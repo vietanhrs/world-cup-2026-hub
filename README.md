@@ -35,6 +35,20 @@ bun run dev
 bun run build
 ```
 
+## Testing
+
+```sh
+bun run test
+bun run test:e2e
+bun run test:all
+```
+
+Playwright runs against a Vite web server and uses Chromium. If the browser binary is missing on a fresh machine, install it once:
+
+```sh
+bunx playwright install chromium
+```
+
 ## Media Tracks
 
 Put World Cup audio files in `public/media`. The app generates `public/media/tracks.json` before development and production builds, then uses that manifest for the music player playlist.

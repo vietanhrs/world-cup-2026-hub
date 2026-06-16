@@ -33,10 +33,15 @@ export function actualResultOf(match: Match): Match['result'] {
   return match.result;
 }
 
+function actualScoreOf(match: Match): PredictionScore | undefined {
+  const result = actualResultOf(match);
+  return result ? { home: result.home, away: result.away } : undefined;
+}
+
 export function withActualResults(predictions: Prediction): Prediction {
   return allMatches.reduce<Prediction>(
     (nextPredictions, match) => {
-      const result = actualResultOf(match);
+      const result = actualScoreOf(match);
       if (result) nextPredictions[match.id] = result;
       return nextPredictions;
     },
@@ -211,7 +216,7 @@ function predictedScore(home: Team, away: Team, knockout = false) {
 export function buildDefaultPredictions(): Prediction {
   const predictions: Prediction = {};
   groupMatches.forEach((match) => {
-    const result = actualResultOf(match);
+    const result = actualScoreOf(match);
     if (result) {
       predictions[match.id] = result;
       return;
