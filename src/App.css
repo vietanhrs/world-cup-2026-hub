@@ -510,9 +510,53 @@
   display: grid;
   justify-items: center;
   gap: 3px;
-  width: 70px;
+  width: 78px;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+
+.pitch-player-with-portrait {
+  gap: 1px;
+}
+
+.player-portrait-frame {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: 48px;
+  height: 54px;
+  border-radius: 999px 999px 14px 14px;
+  background: radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.42), transparent 48%), rgba(5, 20, 12, 0.36);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.24),
+    0 9px 18px rgba(0, 0, 0, 0.32);
+}
+
+.player-portrait {
+  display: block;
+  width: 52px;
+  max-width: none;
+  height: 58px;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.48));
+}
+
+.player-number-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding-inline: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 4px 9px rgba(0, 0, 0, 0.3);
 }
 
 .shirt {
@@ -552,7 +596,7 @@
 }
 
 .pitch-player-name {
-  width: 84px;
+  width: 90px;
   color: #ffffff;
   line-height: 1.05;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.88);

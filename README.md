@@ -77,3 +77,5 @@ FIFA's official scores and fixtures page is used as the source-of-truth cross-ch
 ```txt
 https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/scores-fixtures
 ```
+
+Player portrait cutouts for the projected XI board are stored as remote image references in `src/data/playerPortraits.ts`. The first pass uses transparent PNG cutouts from TheSportsDB where a clean match exists; players without a reliable cutout keep the generated shirt marker instead of showing an uncertain portrait.
