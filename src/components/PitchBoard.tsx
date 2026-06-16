@@ -97,7 +97,7 @@ function PlayerMarker({ player, portrait, shirtTextColor, teamColor }: PlayerMar
         <div className="player-portrait-frame">
           <img
             className="player-portrait"
-            src={portrait.src}
+            src={portrait.transparentSrc ?? portrait.src}
             alt={`${player.name} portrait`}
             loading="lazy"
             onError={() => setImageFailed(true)}

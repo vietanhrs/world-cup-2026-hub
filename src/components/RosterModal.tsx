@@ -13,7 +13,7 @@ export function RosterModal({ team, onClose }: RosterModalProps) {
   const { t, rosterRoleLabel } = useI18n();
 
   return (
-    <Modal opened={!!team} onClose={onClose} title={team ? t('roster.title', { team: team.name }) : ''} size="xl">
+    <Modal opened={!!team} onClose={onClose} title={team ? t('roster.title', { team: team.name }) : ''} size="min(96vw, 1400px)">
       {team && (
         <Stack>
           <Group>
