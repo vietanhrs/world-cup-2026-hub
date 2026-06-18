@@ -227,6 +227,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Kansas City',
     homeRef: 'argentina',
     awayRef: 'algeria',
+    result: { home: 3, away: 0, status: 'FT', eventId: '760433' },
   },
   {
     id: 'g-J-2',
@@ -237,6 +238,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'San Francisco Bay Area',
     homeRef: 'austria',
     awayRef: 'jordan',
+    result: { home: 3, away: 1, status: 'FT', eventId: '760431' },
   },
   {
     id: 'g-L-1',
@@ -247,6 +249,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Toronto',
     homeRef: 'ghana',
     awayRef: 'panama',
+    result: { home: 1, away: 0, status: 'FT', eventId: '760434' },
   },
   {
     id: 'g-L-2',
@@ -257,6 +260,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Dallas',
     homeRef: 'england',
     awayRef: 'croatia',
+    result: { home: 4, away: 2, status: 'FT', eventId: '760437' },
   },
   {
     id: 'g-K-1',
@@ -267,6 +271,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Houston',
     homeRef: 'portugal',
     awayRef: 'congo-dr',
+    result: { home: 1, away: 1, status: 'FT', eventId: '760435' },
   },
   {
     id: 'g-K-2',
@@ -277,6 +282,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Mexico City',
     homeRef: 'uzbekistan',
     awayRef: 'colombia',
+    result: { home: 1, away: 3, status: 'FT', eventId: '760436' },
   },
   {
     id: 'g-A-3',

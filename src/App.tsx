@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppShell, MantineProvider, Tabs } from '@mantine/core';
+import { Alert, AppShell, Group, Loader, MantineProvider, Tabs, Text } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
-import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
+import { IconAlertCircle, IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
 import { groupMatches as staticGroupMatches, knockoutMatches } from './data/schedule';
 import { AppHeader } from './components/AppHeader';
 import { ClearPredictionsModal } from './components/ClearPredictionsModal';
@@ -35,6 +35,12 @@ type MusicTrack = {
 };
 
 type RepeatMode = 'one' | 'all';
+
+type ScoreRefreshState = {
+  status: 'loading' | 'ready' | 'error';
+  results: Record<string, NonNullable<Match['result']>>;
+  error?: string;
+};
 
 const audioFilePattern = /\.(mp3|wav|ogg|m4a|aac|flac)$/i;
 
@@ -74,7 +80,7 @@ function App() {
   const [predictions, setPredictions] = useState<Prediction>(() =>
     window.location.hash.startsWith('#p=') ? decodePrediction(window.location.hash) : buildDefaultPredictions(),
   );
-  const [liveResults, setLiveResults] = useState<Record<string, NonNullable<Match['result']>>>({});
+  const [scoreRefresh, setScoreRefresh] = useState<ScoreRefreshState>({ status: 'loading', results: {} });
   const [activeGroup, setActiveGroup] = useState('A');
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -90,7 +96,7 @@ function App() {
   const repeatModeRef = useRef<RepeatMode>('all');
   const shuffleEnabledRef = useRef(false);
 
-  const groupMatches = useMemo(() => applyLiveResults(staticGroupMatches, liveResults), [liveResults]);
+  const groupMatches = useMemo(() => applyLiveResults(staticGroupMatches, scoreRefresh.results), [scoreRefresh.results]);
   const allMatches = useMemo(() => [...groupMatches, ...knockoutMatches], [groupMatches]);
   const effectivePredictions = useMemo(() => withActualResults(predictions, allMatches), [allMatches, predictions]);
   const standings = useMemo(() => computeStandingsForMatches(effectivePredictions, groupMatches), [effectivePredictions, groupMatches]);
@@ -121,8 +127,14 @@ function App() {
   useEffect(() => {
     const loadLiveResults = async () => {
       try {
-        setLiveResults(await fetchEspnResults(staticGroupMatches));
+        const results = await fetchEspnResults(staticGroupMatches);
+        setScoreRefresh({ status: 'ready', results });
       } catch (error) {
+        setScoreRefresh((current) => ({
+          status: current.status === 'loading' ? 'error' : current.status,
+          results: current.results,
+          error: error instanceof Error ? error.message : 'Unable to refresh ESPN scoreboard',
+        }));
         console.warn('Unable to refresh ESPN scoreboard', error);
       }
     };
@@ -352,50 +364,70 @@ function App() {
           onClear={() => setClearConfirmOpen(true)}
         />
         <AppShell.Main>
-          <HeroSection completed={completed} total={total} champion={champion} />
+          {scoreRefresh.status === 'loading' ? (
+            <div className="score-refresh-state">
+              <Group justify="center" gap="sm">
+                <Loader size="sm" />
+                <Text fw={800}>Refreshing latest World Cup scores...</Text>
+              </Group>
+              <Text size="sm" c="dimmed" ta="center" mt={6}>
+                The match board opens after the first ESPN scoreboard refresh, so completed results are not shown from stale bundled data.
+              </Text>
+            </div>
+          ) : (
+            <>
+              {scoreRefresh.status === 'error' ? (
+                <Alert color="yellow" icon={<IconAlertCircle size={18} />} mb="md">
+                  Could not reach ESPN right now. Showing bundled fallback scores until the next automatic refresh.
+                  {scoreRefresh.error ? ` (${scoreRefresh.error})` : ''}
+                </Alert>
+              ) : null}
+              <HeroSection completed={completed} total={total} champion={champion} />
 
-          <Tabs defaultValue="predict" className="main-tabs">
-            <Tabs.List>
-              <Tabs.Tab value="predict" leftSection={<IconPencil size={16} />}>
-                {t('tabs.predict')}
-              </Tabs.Tab>
-              <Tabs.Tab value="schedule" leftSection={<IconCalendarEvent size={16} />}>
-                {t('tabs.schedule')}
-              </Tabs.Tab>
-              <Tabs.Tab value="results" leftSection={<IconChartBar size={16} />}>
-                {t('tabs.results')}
-              </Tabs.Tab>
-            </Tabs.List>
+              <Tabs defaultValue="predict" className="main-tabs">
+                <Tabs.List>
+                  <Tabs.Tab value="predict" leftSection={<IconPencil size={16} />}>
+                    {t('tabs.predict')}
+                  </Tabs.Tab>
+                  <Tabs.Tab value="schedule" leftSection={<IconCalendarEvent size={16} />}>
+                    {t('tabs.schedule')}
+                  </Tabs.Tab>
+                  <Tabs.Tab value="results" leftSection={<IconChartBar size={16} />}>
+                    {t('tabs.results')}
+                  </Tabs.Tab>
+                </Tabs.List>
 
-            <Tabs.Panel value="predict" pt="md">
-              <PredictPanel
-                activeGroup={activeGroup}
-                groupMatches={groupMatches}
-                knockoutMatches={knockoutMatches}
-                predictions={effectivePredictions}
-                resolver={resolver}
-                onActiveGroupChange={setActiveGroup}
-                onScore={onScore}
-                onRoster={setSelectedTeam}
-                onDetails={setSelectedMatch}
-              />
-            </Tabs.Panel>
+                <Tabs.Panel value="predict" pt="md">
+                  <PredictPanel
+                    activeGroup={activeGroup}
+                    groupMatches={groupMatches}
+                    knockoutMatches={knockoutMatches}
+                    predictions={effectivePredictions}
+                    resolver={resolver}
+                    onActiveGroupChange={setActiveGroup}
+                    onScore={onScore}
+                    onRoster={setSelectedTeam}
+                    onDetails={setSelectedMatch}
+                  />
+                </Tabs.Panel>
 
-            <Tabs.Panel value="schedule" pt="md">
-              <SchedulePanel groupMatches={groupMatches} resolver={resolver} onRoster={setSelectedTeam} onDetails={setSelectedMatch} />
-            </Tabs.Panel>
+                <Tabs.Panel value="schedule" pt="md">
+                  <SchedulePanel groupMatches={groupMatches} resolver={resolver} onRoster={setSelectedTeam} onDetails={setSelectedMatch} />
+                </Tabs.Panel>
 
-            <Tabs.Panel value="results" pt="md">
-              <ResultsPanel
-                groupMatches={groupMatches}
-                knockoutMatches={knockoutMatches}
-                predictions={effectivePredictions}
-                standings={standings}
-                resolver={resolver}
-                onRoster={setSelectedTeam}
-              />
-            </Tabs.Panel>
-          </Tabs>
+                <Tabs.Panel value="results" pt="md">
+                  <ResultsPanel
+                    groupMatches={groupMatches}
+                    knockoutMatches={knockoutMatches}
+                    predictions={effectivePredictions}
+                    standings={standings}
+                    resolver={resolver}
+                    onRoster={setSelectedTeam}
+                  />
+                </Tabs.Panel>
+              </Tabs>
+            </>
+          )}
         </AppShell.Main>
       </AppShell>
 

@@ -67,10 +67,10 @@ docker run --rm -p 3000:3000 world-cup-2026-hub
 
 The app keeps World Cup 2026 tournament data in source for a static demo deployment. FIFA schedule, groups, bracket mapping, and official final squads can be refreshed later without changing the prediction engine.
 
-Completed match results are stored on each match in `src/data/schedule.ts` as a fallback. At runtime, the browser refreshes group-stage scores from ESPN's free FIFA World Cup scoreboard JSON endpoint every two minutes and overlays fresher full-time or in-play scores when available. Completed scores keep ESPN event ids so the app can fetch detailed match data from ESPN's free summary JSON endpoint when a user opens a finished match. The fallback scores were refreshed on 2026-06-17 from:
+Completed match results are stored on each match in `src/data/schedule.ts` as a fallback. At runtime, the browser refreshes group-stage scores from ESPN's free FIFA World Cup scoreboard JSON endpoint before rendering the match board, then refreshes again every two minutes and overlays fresher full-time or in-play scores when available. This prevents users from briefly seeing stale bundled results when they open the app. Completed scores keep ESPN event ids so the app can fetch detailed match data from ESPN's free summary JSON endpoint when a user opens a finished match. The fallback scores were refreshed on 2026-06-18 from:
 
 ```txt
-https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260618&limit=200
+https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260619&limit=200
 ```
 
 Completed match details are fetched on demand from:

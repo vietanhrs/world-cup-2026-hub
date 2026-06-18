@@ -120,6 +120,21 @@
   margin-top: 18px;
 }
 
+.score-refresh-state {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  padding: 24px;
+  border: 1px solid rgba(51, 190, 113, 0.2);
+  border-radius: 8px;
+  background: rgba(8, 24, 16, 0.58);
+}
+
+[data-mantine-color-scheme='light'] .score-refresh-state {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(12, 88, 44, 0.15);
+}
+
 .main-tabs [role='tablist'] {
   max-width: 100%;
   overflow-x: auto;

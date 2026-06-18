@@ -44,7 +44,7 @@ describe('MatchCard', () => {
   it('allows score entry for upcoming matches', async () => {
     const user = userEvent.setup();
     const onScore = vi.fn();
-    const match = groupMatches.find((candidate) => candidate.id === 'g-J-2');
+    const match = groupMatches.find((candidate) => candidate.id === 'g-B-3');
     if (!match) throw new Error('Expected upcoming match fixture');
 
     renderWithProviders(
@@ -62,15 +62,15 @@ describe('MatchCard', () => {
   it('opens roster details when a resolved team badge is selected', async () => {
     const user = userEvent.setup();
     const onRoster = vi.fn<(team: Team) => void>();
-    const match = groupMatches.find((candidate) => candidate.id === 'g-J-2');
+    const match = groupMatches.find((candidate) => candidate.id === 'g-B-3');
     if (!match) throw new Error('Expected upcoming match fixture');
 
     renderWithProviders(
       <MatchCard match={match} prediction={{ home: null, away: null }} resolver={resolver} onScore={vi.fn()} onRoster={onRoster} />,
     );
 
-    await user.click(screen.getByRole('button', { name: /AUT/i }));
+    await user.click(screen.getByRole('button', { name: /SUI/i }));
 
-    expect(onRoster).toHaveBeenCalledWith(teamMap.austria);
+    expect(onRoster).toHaveBeenCalledWith(teamMap.switzerland);
   });
 });

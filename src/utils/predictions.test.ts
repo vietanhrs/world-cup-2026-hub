@@ -10,7 +10,7 @@ describe('prediction result helpers', () => {
     });
 
     expect(predictions['g-A-1']).toEqual({ home: 2, away: 0 });
-    expect(predictions['g-J-2']).toEqual({ home: 3, away: 2 });
+    expect(predictions['g-J-2']).toEqual({ home: 3, away: 1 });
   });
 
   it('uses actual scores in the default prediction board', () => {
@@ -41,6 +41,6 @@ describe('prediction result helpers', () => {
   });
 
   it('keeps upcoming group matches editable by leaving them without result metadata', () => {
-    expect(groupMatches.find((match) => match.id === 'g-J-2')?.result).toBeUndefined();
+    expect(groupMatches.find((match) => match.id === 'g-B-3')?.result).toBeUndefined();
   });
 });
