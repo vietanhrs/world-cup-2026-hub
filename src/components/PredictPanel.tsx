@@ -1,20 +1,32 @@
 import { SegmentedControl, SimpleGrid, Title } from '@mantine/core';
-import { groupMatches, knockoutMatches } from '../data/schedule';
 import { groupKeys } from '../data/groups';
 import { useI18n } from '../i18n';
 import { MatchCard } from './MatchCard';
-import type { Prediction, Team } from '../types';
+import type { Match, Prediction, Team } from '../types';
 
 type PredictPanelProps = {
   activeGroup: string;
+  groupMatches: Match[];
+  knockoutMatches: Match[];
   predictions: Prediction;
   resolver: (ref: string) => Team | string;
   onActiveGroupChange: (group: string) => void;
   onScore: (id: string, side: 'home' | 'away', value: number | string | null) => void;
   onRoster: (team: Team) => void;
+  onDetails: (match: Match) => void;
 };
 
-export function PredictPanel({ activeGroup, predictions, resolver, onActiveGroupChange, onScore, onRoster }: PredictPanelProps) {
+export function PredictPanel({
+  activeGroup,
+  groupMatches,
+  knockoutMatches,
+  predictions,
+  resolver,
+  onActiveGroupChange,
+  onScore,
+  onRoster,
+  onDetails,
+}: PredictPanelProps) {
   const { t } = useI18n();
 
   return (
@@ -39,6 +51,7 @@ export function PredictPanel({ activeGroup, predictions, resolver, onActiveGroup
               resolver={resolver}
               onScore={onScore}
               onRoster={onRoster}
+              onDetails={onDetails}
               variant="group"
             />
           ))}
@@ -55,6 +68,7 @@ export function PredictPanel({ activeGroup, predictions, resolver, onActiveGroup
             resolver={resolver}
             onScore={onScore}
             onRoster={onRoster}
+            onDetails={onDetails}
             variant="knockout"
           />
         ))}

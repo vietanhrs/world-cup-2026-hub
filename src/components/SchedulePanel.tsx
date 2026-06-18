@@ -1,19 +1,19 @@
-import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { groupMatches } from '../data/schedule';
+import { Badge, Card, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { useI18n } from '../i18n';
 import { actualResultOf, formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
-import type { Team } from '../types';
+import type { Match, Team } from '../types';
 
 type SchedulePanelProps = {
+  groupMatches: Match[];
   resolver: (ref: string) => Team | string;
   onRoster: (team: Team) => void;
+  onDetails: (match: Match) => void;
 };
 
-const sortedGroupMatches = [...groupMatches].sort((left, right) => new Date(left.kickoff).getTime() - new Date(right.kickoff).getTime());
-
-export function SchedulePanel({ resolver, onRoster }: SchedulePanelProps) {
+export function SchedulePanel({ groupMatches, resolver, onRoster, onDetails }: SchedulePanelProps) {
   const { language, t } = useI18n();
+  const sortedGroupMatches = [...groupMatches].sort((left, right) => new Date(left.kickoff).getTime() - new Date(right.kickoff).getTime());
 
   return (
     <Stack gap="md">
@@ -45,9 +45,15 @@ export function SchedulePanel({ resolver, onRoster }: SchedulePanelProps) {
               <Group className="schedule-teams" justify="center" gap="xs" wrap="nowrap">
                 <TeamBadge value={home} onOpen={onRoster} />
                 {result ? (
-                  <Badge className="schedule-score" variant="filled" color="green">
-                    {result.home}-{result.away} {result.status}
-                  </Badge>
+                  <UnstyledButton
+                    className="schedule-score-button"
+                    onClick={() => onDetails(match)}
+                    aria-label={`Open match details for ${typeof home === 'string' ? home : home.name} vs ${typeof away === 'string' ? away : away.name}`}
+                  >
+                    <Badge className="schedule-score" variant="filled" color="green">
+                      {result.home}-{result.away} {result.status}
+                    </Badge>
+                  </UnstyledButton>
                 ) : (
                   <Text size="xs" fw={900} c="dimmed">
                     {t('schedule.versus')}

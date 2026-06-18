@@ -10,14 +10,15 @@ export type ScheduleMatch = {
   result?: {
     home: number;
     away: number;
-    status: 'FT';
+    status: string;
+    eventId?: string;
   };
 };
 
 // Source: FIFA FWC26-Match-Schedule_English.pdf, fetched from FIFA Digital Hub on 2026-06-08.
 // Kickoff values are stored as UTC instants so the UI can render them in the client's timezone.
-// Completed group-stage scores were refreshed from ESPN's free FIFA World Cup scoreboard JSON on 2026-06-16,
-// with FIFA scores & fixtures used as the official cross-check.
+// Completed group-stage scores are kept here as a static fallback. The app overlays fresher ESPN scoreboard
+// data at runtime when the browser can reach ESPN's public JSON endpoint.
 export const groupMatches: ScheduleMatch[] = [
   {
     id: 'g-A-1',
@@ -182,6 +183,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Los Angeles',
     homeRef: 'iran',
     awayRef: 'new-zealand',
+    result: { home: 2, away: 2, status: 'FT' },
   },
   {
     id: 'g-G-2',
@@ -203,6 +205,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'New York New Jersey',
     homeRef: 'france',
     awayRef: 'senegal',
+    result: { home: 3, away: 1, status: 'FT' },
   },
   {
     id: 'g-I-2',
@@ -213,6 +216,7 @@ export const groupMatches: ScheduleMatch[] = [
     venue: 'Boston',
     homeRef: 'iraq',
     awayRef: 'norway',
+    result: { home: 1, away: 4, status: 'FT' },
   },
   {
     id: 'g-J-1',

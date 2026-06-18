@@ -14,27 +14,37 @@ describe('MatchCard', () => {
     window.localStorage.clear();
   });
 
-  it('shows actual score and disables inputs for completed matches', () => {
+  it('shows actual score as a details button for completed matches', async () => {
+    const user = userEvent.setup();
+    const onDetails = vi.fn();
     const match = groupMatches.find((candidate) => candidate.id === 'g-A-1');
     if (!match) throw new Error('Expected completed match fixture');
 
     renderWithProviders(
-      <MatchCard match={match} prediction={{ home: 0, away: 9 }} resolver={resolver} onScore={vi.fn()} onRoster={vi.fn()} />,
+      <MatchCard
+        match={match}
+        prediction={{ home: 0, away: 9 }}
+        resolver={resolver}
+        onScore={vi.fn()}
+        onRoster={vi.fn()}
+        onDetails={onDetails}
+      />,
     );
 
     expect(screen.getByText('FT')).toBeInTheDocument();
-    const inputs = screen.getAllByRole('textbox');
-    expect(inputs).toHaveLength(2);
-    expect(inputs[0]).toHaveValue('2');
-    expect(inputs[1]).toHaveValue('0');
-    expect(inputs[0]).toBeDisabled();
-    expect(inputs[1]).toBeDisabled();
+    const scoreButton = screen.getByRole('button', { name: /open match details for mexico vs south africa/i });
+    expect(scoreButton).toHaveTextContent('2-0 FT');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+
+    await user.click(scoreButton);
+
+    expect(onDetails).toHaveBeenCalledWith(match);
   });
 
   it('allows score entry for upcoming matches', async () => {
     const user = userEvent.setup();
     const onScore = vi.fn();
-    const match = groupMatches.find((candidate) => candidate.id === 'g-I-1');
+    const match = groupMatches.find((candidate) => candidate.id === 'g-J-2');
     if (!match) throw new Error('Expected upcoming match fixture');
 
     renderWithProviders(
@@ -52,15 +62,15 @@ describe('MatchCard', () => {
   it('opens roster details when a resolved team badge is selected', async () => {
     const user = userEvent.setup();
     const onRoster = vi.fn<(team: Team) => void>();
-    const match = groupMatches.find((candidate) => candidate.id === 'g-I-1');
+    const match = groupMatches.find((candidate) => candidate.id === 'g-J-2');
     if (!match) throw new Error('Expected upcoming match fixture');
 
     renderWithProviders(
       <MatchCard match={match} prediction={{ home: null, away: null }} resolver={resolver} onScore={vi.fn()} onRoster={onRoster} />,
     );
 
-    await user.click(screen.getByRole('button', { name: /FRA/i }));
+    await user.click(screen.getByRole('button', { name: /AUT/i }));
 
-    expect(onRoster).toHaveBeenCalledWith(teamMap.france);
+    expect(onRoster).toHaveBeenCalledWith(teamMap.austria);
   });
 });

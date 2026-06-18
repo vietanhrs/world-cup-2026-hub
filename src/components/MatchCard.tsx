@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, Group, NumberInput, Text } from '@mantine/core';
+import { Badge, Card, Group, NumberInput, Text, UnstyledButton } from '@mantine/core';
 import { useI18n } from '../i18n';
 import { actualResultOf, formatKickoff } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
@@ -13,6 +13,7 @@ type MatchCardProps = {
   resolver: (ref: string) => Team | string;
   onScore: (id: string, side: 'home' | 'away', value: ScoreValue) => void;
   onRoster: (team: Team) => void;
+  onDetails?: (match: Match) => void;
   variant?: 'group' | 'knockout';
 };
 
@@ -68,7 +69,7 @@ function ScoreInput({ value, disabled, onChange }: ScoreInputProps) {
   );
 }
 
-export function MatchCard({ match, prediction, resolver, onScore, onRoster, variant = 'group' }: MatchCardProps) {
+export function MatchCard({ match, prediction, resolver, onScore, onRoster, onDetails, variant = 'group' }: MatchCardProps) {
   const { language, matchLabel, t } = useI18n();
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
@@ -95,20 +96,25 @@ export function MatchCard({ match, prediction, resolver, onScore, onRoster, vari
         <div className="match-team match-team-home">
           <TeamBadge value={home} onOpen={onRoster} />
         </div>
-        <div>
-          <ScoreInput
-            value={displayedScore?.home}
-            onChange={(value) => onScore(match.id, 'home', value)}
-            disabled={!hasTeams || isCompleted}
-          />
-        </div>
-        <div>
-          <ScoreInput
-            value={displayedScore?.away}
-            onChange={(value) => onScore(match.id, 'away', value)}
-            disabled={!hasTeams || isCompleted}
-          />
-        </div>
+        {isCompleted && actualResult ? (
+          <UnstyledButton
+            className="match-score-button"
+            onClick={() => onDetails?.(match)}
+            disabled={!onDetails}
+            aria-label={`Open match details for ${typeof home === 'string' ? home : home.name} vs ${typeof away === 'string' ? away : away.name}`}
+          >
+            {actualResult.home}-{actualResult.away} {actualResult.status}
+          </UnstyledButton>
+        ) : (
+          <>
+            <div>
+              <ScoreInput value={displayedScore?.home} onChange={(value) => onScore(match.id, 'home', value)} disabled={!hasTeams} />
+            </div>
+            <div>
+              <ScoreInput value={displayedScore?.away} onChange={(value) => onScore(match.id, 'away', value)} disabled={!hasTeams} />
+            </div>
+          </>
+        )}
         <div className="match-team match-team-away">
           <TeamBadge value={away} onOpen={onRoster} />
         </div>

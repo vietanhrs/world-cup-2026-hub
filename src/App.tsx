@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppShell, MantineProvider, Tabs } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
 import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
-import { allMatches } from './data/schedule';
+import { groupMatches as staticGroupMatches, knockoutMatches } from './data/schedule';
 import { AppHeader } from './components/AppHeader';
 import { ClearPredictionsModal } from './components/ClearPredictionsModal';
 import { HeroSection } from './components/HeroSection';
+import { MatchDetailsModal } from './components/MatchDetailsModal';
 import { PredictPanel } from './components/PredictPanel';
 import { ResultsPanel } from './components/ResultsPanel';
 import { RosterModal } from './components/RosterModal';
@@ -15,14 +16,15 @@ import { theme } from './theme';
 import {
   buildDefaultPredictions,
   buildResolver,
-  computeStandings,
+  computeStandingsForMatches,
   decodePrediction,
   encodePrediction,
   hasActualResult,
-  predictionProgress,
+  predictionProgressForMatches,
   withActualResults,
 } from './utils/predictions';
-import type { Prediction, Team } from './types';
+import { applyLiveResults, fetchEspnResults } from './utils/liveScores';
+import type { Match, Prediction, Team } from './types';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './App.css';
@@ -72,8 +74,10 @@ function App() {
   const [predictions, setPredictions] = useState<Prediction>(() =>
     window.location.hash.startsWith('#p=') ? decodePrediction(window.location.hash) : buildDefaultPredictions(),
   );
+  const [liveResults, setLiveResults] = useState<Record<string, NonNullable<Match['result']>>>({});
   const [activeGroup, setActiveGroup] = useState('A');
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
@@ -86,23 +90,48 @@ function App() {
   const repeatModeRef = useRef<RepeatMode>('all');
   const shuffleEnabledRef = useRef(false);
 
-  const effectivePredictions = useMemo(() => withActualResults(predictions), [predictions]);
-  const standings = useMemo(() => computeStandings(effectivePredictions), [effectivePredictions]);
+  const groupMatches = useMemo(() => applyLiveResults(staticGroupMatches, liveResults), [liveResults]);
+  const allMatches = useMemo(() => [...groupMatches, ...knockoutMatches], [groupMatches]);
+  const effectivePredictions = useMemo(() => withActualResults(predictions, allMatches), [allMatches, predictions]);
+  const standings = useMemo(() => computeStandingsForMatches(effectivePredictions, groupMatches), [effectivePredictions, groupMatches]);
   const resolver = useMemo(
     () =>
-      buildResolver(effectivePredictions, standings, {
-        winner: (match) => t('resolver.winner', { match: typeof match === 'string' ? match : matchLabel(match) }),
-        loser: (match) => t('resolver.loser', { match: typeof match === 'string' ? match : matchLabel(match) }),
-        third: (groups) => t('resolver.third', { groups }),
-        groupWinner: (group) => t('resolver.groupWinner', { group }),
-        groupRunnerUp: (group) => t('resolver.groupRunnerUp', { group }),
-      }),
-    [effectivePredictions, matchLabel, standings, t],
+      buildResolver(
+        effectivePredictions,
+        standings,
+        {
+          winner: (match) => t('resolver.winner', { match: typeof match === 'string' ? match : matchLabel(match) }),
+          loser: (match) => t('resolver.loser', { match: typeof match === 'string' ? match : matchLabel(match) }),
+          third: (groups) => t('resolver.third', { groups }),
+          groupWinner: (group) => t('resolver.groupWinner', { group }),
+          groupRunnerUp: (group) => t('resolver.groupRunnerUp', { group }),
+        },
+        {
+          groupMatches,
+          knockoutMatches,
+        },
+      ),
+    [effectivePredictions, groupMatches, matchLabel, standings, t],
   );
-  const completed = predictionProgress(effectivePredictions);
+  const completed = predictionProgressForMatches(effectivePredictions, allMatches);
   const total = allMatches.length;
   const champion = resolver('W:final-1');
   const currentTrack = musicTracks[currentTrackIndex] ?? musicTracks[0] ?? null;
+
+  useEffect(() => {
+    const loadLiveResults = async () => {
+      try {
+        setLiveResults(await fetchEspnResults(staticGroupMatches));
+      } catch (error) {
+        console.warn('Unable to refresh ESPN scoreboard', error);
+      }
+    };
+
+    void loadLiveResults();
+    const intervalId = window.setInterval(loadLiveResults, 120_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -341,26 +370,43 @@ function App() {
             <Tabs.Panel value="predict" pt="md">
               <PredictPanel
                 activeGroup={activeGroup}
+                groupMatches={groupMatches}
+                knockoutMatches={knockoutMatches}
                 predictions={effectivePredictions}
                 resolver={resolver}
                 onActiveGroupChange={setActiveGroup}
                 onScore={onScore}
                 onRoster={setSelectedTeam}
+                onDetails={setSelectedMatch}
               />
             </Tabs.Panel>
 
             <Tabs.Panel value="schedule" pt="md">
-              <SchedulePanel resolver={resolver} onRoster={setSelectedTeam} />
+              <SchedulePanel groupMatches={groupMatches} resolver={resolver} onRoster={setSelectedTeam} onDetails={setSelectedMatch} />
             </Tabs.Panel>
 
             <Tabs.Panel value="results" pt="md">
-              <ResultsPanel predictions={effectivePredictions} standings={standings} resolver={resolver} onRoster={setSelectedTeam} />
+              <ResultsPanel
+                groupMatches={groupMatches}
+                knockoutMatches={knockoutMatches}
+                predictions={effectivePredictions}
+                standings={standings}
+                resolver={resolver}
+                onRoster={setSelectedTeam}
+              />
             </Tabs.Panel>
           </Tabs>
         </AppShell.Main>
       </AppShell>
 
       <ClearPredictionsModal opened={clearConfirmOpen} onClose={() => setClearConfirmOpen(false)} onConfirm={clearAll} />
+      <MatchDetailsModal
+        match={selectedMatch}
+        groupMatches={groupMatches}
+        resolver={resolver}
+        onClose={() => setSelectedMatch(null)}
+        onRoster={setSelectedTeam}
+      />
       <RosterModal team={selectedTeam} onClose={() => setSelectedTeam(null)} />
     </MantineProvider>
   );

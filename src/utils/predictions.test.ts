@@ -6,11 +6,11 @@ describe('prediction result helpers', () => {
   it('overrides user predictions with actual completed match scores', () => {
     const predictions = withActualResults({
       'g-A-1': { home: 0, away: 9 },
-      'g-I-1': { home: 3, away: 2 },
+      'g-J-2': { home: 3, away: 2 },
     });
 
     expect(predictions['g-A-1']).toEqual({ home: 2, away: 0 });
-    expect(predictions['g-I-1']).toEqual({ home: 3, away: 2 });
+    expect(predictions['g-J-2']).toEqual({ home: 3, away: 2 });
   });
 
   it('uses actual scores in the default prediction board', () => {
@@ -41,6 +41,6 @@ describe('prediction result helpers', () => {
   });
 
   it('keeps upcoming group matches editable by leaving them without result metadata', () => {
-    expect(groupMatches.find((match) => match.id === 'g-I-1')?.result).toBeUndefined();
+    expect(groupMatches.find((match) => match.id === 'g-J-2')?.result).toBeUndefined();
   });
 });

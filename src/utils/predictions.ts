@@ -26,7 +26,7 @@ export function scoreOf(prediction?: PredictionScore): { home: number; away: num
 }
 
 export function hasActualResult(match: Match) {
-  return Boolean(match.result);
+  return match.result?.status === 'FT';
 }
 
 export function actualResultOf(match: Match): Match['result'] {
@@ -38,8 +38,8 @@ function actualScoreOf(match: Match): PredictionScore | undefined {
   return result ? { home: result.home, away: result.away } : undefined;
 }
 
-export function withActualResults(predictions: Prediction): Prediction {
-  return allMatches.reduce<Prediction>(
+export function withActualResults(predictions: Prediction, matches: Match[] = allMatches): Prediction {
+  return matches.reduce<Prediction>(
     (nextPredictions, match) => {
       const result = actualScoreOf(match);
       if (result) nextPredictions[match.id] = result;
@@ -68,6 +68,10 @@ function loserFromScore(match: Match, predictions: Prediction, resolver: (ref: s
 }
 
 export function computeStandings(predictions: Prediction) {
+  return computeStandingsForMatches(predictions, groupMatches);
+}
+
+export function computeStandingsForMatches(predictions: Prediction, matches: Match[]) {
   const standings: Record<string, Standing[]> = {};
   for (const group of groupKeys) {
     const rows = groups[group].map((rawTeam) => ({
@@ -82,7 +86,7 @@ export function computeStandings(predictions: Prediction) {
       points: 0,
     }));
     const byTeam = Object.fromEntries(rows.map((row) => [row.team.id, row]));
-    groupMatches
+    matches
       .filter((match) => match.group === group)
       .forEach((match) => {
         const score = scoreOf(predictions[match.id]);
@@ -119,7 +123,11 @@ export function computeStandings(predictions: Prediction) {
 }
 
 export function groupComplete(group: string, predictions: Prediction) {
-  return groupMatches.filter((match) => match.group === group).every((match) => scoreOf(predictions[match.id]));
+  return groupCompleteForMatches(group, predictions, groupMatches);
+}
+
+export function groupCompleteForMatches(group: string, predictions: Prediction, matches: Match[]) {
+  return matches.filter((match) => match.group === group).every((match) => scoreOf(predictions[match.id]));
 }
 
 function thirdPlaceRows(standings: Record<string, Standing[]>, candidateGroups: string[], usedTeamIds: Set<string>) {
@@ -129,7 +137,14 @@ function thirdPlaceRows(standings: Record<string, Standing[]>, candidateGroups: 
     .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.team.seed - b.team.seed);
 }
 
-export function buildResolver(predictions: Prediction, standings: Record<string, Standing[]>, labels = defaultResolverLabels) {
+export function buildResolver(
+  predictions: Prediction,
+  standings: Record<string, Standing[]>,
+  labels = defaultResolverLabels,
+  matches: { groupMatches?: Match[]; knockoutMatches?: Match[] } = {},
+) {
+  const resolverGroupMatches = matches.groupMatches ?? groupMatches;
+  const resolverKnockoutMatches = matches.knockoutMatches ?? knockoutMatches;
   const winners: Record<string, Team> = {};
   const losers: Record<string, Team> = {};
   const thirdSlots: Record<string, Team> = {};
@@ -137,13 +152,14 @@ export function buildResolver(predictions: Prediction, standings: Record<string,
   const resolver = (ref: string): Team | string => {
     if (teamMap[ref]) return teamMap[ref];
     if (ref.startsWith('W:'))
-      return winners[ref.slice(2)] ?? labels.winner(knockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
+      return winners[ref.slice(2)] ?? labels.winner(resolverKnockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
     if (ref.startsWith('L:'))
-      return losers[ref.slice(2)] ?? labels.loser(knockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
+      return losers[ref.slice(2)] ?? labels.loser(resolverKnockoutMatches.find((match) => match.id === ref.slice(2)) ?? ref.slice(2));
     if (/^3[A-L]+$/.test(ref)) {
       if (thirdSlots[ref]) return thirdSlots[ref];
       const candidateGroups = ref.slice(1).split('');
-      if (!candidateGroups.every((group) => groupComplete(group, predictions))) return labels.third(ref.slice(1));
+      if (!candidateGroups.every((group) => groupCompleteForMatches(group, predictions, resolverGroupMatches)))
+        return labels.third(ref.slice(1));
       const [bestThird] = thirdPlaceRows(standings, candidateGroups, usedThirdPlaceTeamIds);
       if (!bestThird) return labels.third(ref.slice(1));
       thirdSlots[ref] = bestThird.team;
@@ -153,12 +169,12 @@ export function buildResolver(predictions: Prediction, standings: Record<string,
     if (/^[12][A-L]$/.test(ref)) {
       const rank = Number(ref[0]) - 1;
       const group = ref[1];
-      if (groupComplete(group, predictions)) return standings[group][rank].team;
+      if (groupCompleteForMatches(group, predictions, resolverGroupMatches)) return standings[group][rank].team;
       return rank === 0 ? labels.groupWinner(group) : labels.groupRunnerUp(group);
     }
     return ref;
   };
-  knockoutMatches.forEach((match) => {
+  resolverKnockoutMatches.forEach((match) => {
     const winner = winnerFromScore(match, predictions, resolver);
     const loser = loserFromScore(match, predictions, resolver);
     if (winner) winners[match.id] = winner;
@@ -214,8 +230,12 @@ function predictedScore(home: Team, away: Team, knockout = false) {
 }
 
 export function buildDefaultPredictions(): Prediction {
+  return buildDefaultPredictionsForMatches(groupMatches, knockoutMatches);
+}
+
+export function buildDefaultPredictionsForMatches(groupStageMatches: Match[], playoffMatches: Match[]): Prediction {
   const predictions: Prediction = {};
-  groupMatches.forEach((match) => {
+  groupStageMatches.forEach((match) => {
     const result = actualScoreOf(match);
     if (result) {
       predictions[match.id] = result;
@@ -226,9 +246,12 @@ export function buildDefaultPredictions(): Prediction {
     predictions[match.id] = predictedScore(home, away);
   });
 
-  knockoutMatches.forEach((match) => {
-    const standings = computeStandings(predictions);
-    const resolver = buildResolver(predictions, standings);
+  playoffMatches.forEach((match) => {
+    const standings = computeStandingsForMatches(predictions, groupStageMatches);
+    const resolver = buildResolver(predictions, standings, defaultResolverLabels, {
+      groupMatches: groupStageMatches,
+      knockoutMatches: playoffMatches,
+    });
     const home = resolver(match.homeRef);
     const away = resolver(match.awayRef);
     if (typeof home !== 'string' && typeof away !== 'string') {
@@ -240,5 +263,9 @@ export function buildDefaultPredictions(): Prediction {
 }
 
 export function predictionProgress(predictions: Prediction) {
-  return allMatches.filter((match) => scoreOf(predictions[match.id])).length;
+  return predictionProgressForMatches(predictions, allMatches);
+}
+
+export function predictionProgressForMatches(predictions: Prediction, matches: Match[]) {
+  return matches.filter((match) => scoreOf(predictions[match.id])).length;
 }

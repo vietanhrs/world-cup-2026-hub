@@ -1,12 +1,13 @@
 import { Badge, Card, Group, ScrollArea, Table, Text, Title } from '@mantine/core';
-import { knockoutMatches } from '../data/schedule';
 import { groupKeys } from '../data/groups';
 import { useI18n } from '../i18n';
-import { groupComplete } from '../utils/predictions';
+import { groupCompleteForMatches } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, Prediction, Standing, Team } from '../types';
 
 type ResultsPanelProps = {
+  groupMatches: Match[];
+  knockoutMatches: Match[];
   predictions: Prediction;
   standings: Record<string, Standing[]>;
   resolver: (ref: string) => Team | string;
@@ -66,7 +67,6 @@ const roundLabels: { label: string; col: number; color?: 'green' | 'yellow' }[] 
   { label: 'R32', col: 9 },
 ] as const;
 
-const matchById = Object.fromEntries(knockoutMatches.map((match) => [match.id, match]));
 const slotById = Object.fromEntries(bracketSlots.map((slot) => [slot.id, slot]));
 
 const bracketMetrics = {
@@ -161,21 +161,21 @@ function connectionPaths(parent: Match) {
   return [...drawSide(leftChildren, 'left'), ...drawSide(rightChildren, 'right')];
 }
 
-const bracketLinePaths = knockoutMatches.flatMap((match) =>
-  connectionPaths(match).map((path, index) => ({ id: `${match.id}-${index}`, path })),
-);
-
-export function ResultsPanel({ predictions, standings, resolver, onRoster }: ResultsPanelProps) {
+export function ResultsPanel({ groupMatches, knockoutMatches, predictions, standings, resolver, onRoster }: ResultsPanelProps) {
   const { t, matchLabel } = useI18n();
   const leftGroups = groupKeys.slice(0, 6);
   const rightGroups = groupKeys.slice(6);
+  const matchById = Object.fromEntries(knockoutMatches.map((match) => [match.id, match]));
+  const bracketLinePaths = knockoutMatches.flatMap((match) =>
+    connectionPaths(match).map((path, index) => ({ id: `${match.id}-${index}`, path })),
+  );
 
   const renderStandingCard = (group: string) => (
     <Card key={group} withBorder className="standings-card">
       <Group justify="space-between" mb={6}>
         <Title order={5}>{t('common.group', { group })}</Title>
-        <Badge size="xs" color={groupComplete(group, predictions) ? 'green' : 'gray'}>
-          {groupComplete(group, predictions) ? t('results.groupComplete') : t('results.groupInProgress')}
+        <Badge size="xs" color={groupCompleteForMatches(group, predictions, groupMatches) ? 'green' : 'gray'}>
+          {groupCompleteForMatches(group, predictions, groupMatches) ? t('results.groupComplete') : t('results.groupInProgress')}
         </Badge>
       </Group>
       <Table.ScrollContainer minWidth={168}>

@@ -183,6 +183,39 @@
   margin-top: 8px;
 }
 
+.match-score-button {
+  grid-column: span 2;
+  display: grid;
+  place-items: center;
+  min-width: 112px;
+  height: 36px;
+  padding-inline: 10px;
+  border: 1px solid rgba(51, 190, 113, 0.46);
+  border-radius: 8px;
+  color: var(--mantine-color-green-1);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  background: rgba(51, 190, 113, 0.16);
+  cursor: pointer;
+}
+
+.match-score-button:hover,
+.match-score-button:focus-visible,
+.schedule-score-button:hover .schedule-score,
+.schedule-score-button:focus-visible .schedule-score {
+  filter: brightness(1.1);
+  box-shadow: 0 0 0 2px rgba(51, 190, 113, 0.26);
+}
+
+.match-score-button:disabled {
+  cursor: default;
+}
+
+[data-mantine-color-scheme='light'] .match-score-button {
+  color: var(--mantine-color-green-9);
+  background: rgba(51, 190, 113, 0.16);
+}
+
 .match-team-home {
   justify-self: end;
 }
@@ -302,6 +335,76 @@
 .schedule-score {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
+}
+
+.schedule-score-button {
+  flex: 0 0 auto;
+  border-radius: 8px;
+}
+
+.match-detail-header {
+  padding: 12px;
+  border: 1px solid rgba(51, 190, 113, 0.22);
+  border-radius: 8px;
+  background: rgba(51, 190, 113, 0.08);
+}
+
+.match-detail-score {
+  min-width: 92px;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-detail-section {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(8, 24, 16, 0.48);
+}
+
+[data-mantine-color-scheme='light'] .match-detail-section {
+  border-color: rgba(12, 88, 44, 0.14);
+  background: rgba(247, 255, 249, 0.86);
+}
+
+.lineup-list {
+  display: grid;
+  gap: 7px;
+}
+
+.lineup-player {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: center;
+}
+
+.match-event-row {
+  display: grid;
+  grid-template-columns: 54px 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-mantine-color-scheme='light'] .match-event-row {
+  border-bottom-color: rgba(12, 88, 44, 0.1);
+}
+
+.match-event-minute {
+  justify-self: start;
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-stats-table th,
+.match-stats-table td {
+  text-align: center;
+}
+
+.match-stats-table th:nth-child(2),
+.match-stats-table td:nth-child(2) {
+  width: 50%;
 }
 
 .qualified-row {

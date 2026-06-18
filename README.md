@@ -9,6 +9,7 @@ World Cup 2026 Hub is a static web app for exploring the tournament and building
 - Build the playoff bracket from predicted qualifiers and match winners.
 - Browse national team roster information, including players grouped by goalkeeper, defender, midfielder, and forward.
 - Review tournament groups, match schedule, standings, and knockout paths in the same app.
+- Click a completed match score to open ESPN-sourced details: starting lineups, key match events, and team statistics.
 - Keep unresolved slots as readable placeholders such as `Nhất bảng A`, `Nhì bảng B`, or `Thắng Tứ kết 1`.
 - Share predictions through a URL hash.
 - Start prediction mode and play `/media/three-nations.mp3` when the audio file is available.
@@ -66,10 +67,16 @@ docker run --rm -p 3000:3000 world-cup-2026-hub
 
 The app keeps World Cup 2026 tournament data in source for a static demo deployment. FIFA schedule, groups, bracket mapping, and official final squads can be refreshed later without changing the prediction engine.
 
-Completed match results are stored on each match in `src/data/schedule.ts`. The current scores were refreshed on 2026-06-16 from ESPN's free FIFA World Cup scoreboard JSON endpoint:
+Completed match results are stored on each match in `src/data/schedule.ts` as a fallback. At runtime, the browser refreshes group-stage scores from ESPN's free FIFA World Cup scoreboard JSON endpoint every two minutes and overlays fresher full-time or in-play scores when available. Completed scores keep ESPN event ids so the app can fetch detailed match data from ESPN's free summary JSON endpoint when a user opens a finished match. The fallback scores were refreshed on 2026-06-17 from:
 
 ```txt
-https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260616&limit=100
+https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260618&limit=200
+```
+
+Completed match details are fetched on demand from:
+
+```txt
+https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=<ESPN_EVENT_ID>
 ```
 
 FIFA's official scores and fixtures page is used as the source-of-truth cross-check:
