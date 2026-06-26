@@ -33,6 +33,19 @@ describe('live score helpers', () => {
               },
             ],
           },
+          {
+            id: '760449',
+            date: '2026-06-21T04:00Z',
+            competitions: [
+              {
+                status: { type: { completed: true, name: 'STATUS_FULL_TIME' } },
+                competitors: [
+                  { homeAway: 'home', score: '0', team: { displayName: 'Tunisia' } },
+                  { homeAway: 'away', score: '4', team: { displayName: 'Japan' } },
+                ],
+              },
+            ],
+          },
         ],
       },
       groupMatches,
@@ -40,6 +53,7 @@ describe('live score helpers', () => {
 
     expect(results['g-G-1']).toEqual({ home: 2, away: 2, status: 'FT', eventId: '760430' });
     expect(results['g-J-1']).toEqual({ home: 3, away: 0, status: '2H', eventId: '760431' });
+    expect(results['g-F-4']).toEqual({ home: 0, away: 4, status: 'FT', eventId: '760449' });
   });
 
   it('ignores scheduled score placeholders', () => {

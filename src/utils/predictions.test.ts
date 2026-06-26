@@ -17,6 +17,7 @@ describe('prediction result helpers', () => {
     const predictions = buildDefaultPredictions();
 
     expect(predictions['g-E-2']).toEqual({ home: 7, away: 1 });
+    expect(predictions['g-F-4']).toEqual({ home: 0, away: 4 });
     expect(predictions['g-H-2']).toEqual({ home: 0, away: 0 });
   });
 

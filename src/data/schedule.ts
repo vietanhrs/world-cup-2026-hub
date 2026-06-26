@@ -399,10 +399,11 @@ export const groupMatches: ScheduleMatch[] = [
     stage: 'group',
     label: 'Trận 36',
     group: 'F',
-    kickoff: '2026-06-20T04:00:00Z',
+    kickoff: '2026-06-21T04:00:00Z',
     venue: 'Monterrey',
     homeRef: 'tunisia',
     awayRef: 'japan',
+    result: { home: 0, away: 4, status: 'FT', eventId: '760449' },
   },
   {
     id: 'g-H-3',
