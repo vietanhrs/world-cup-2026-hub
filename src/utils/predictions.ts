@@ -33,6 +33,11 @@ export function actualResultOf(match: Match): Match['result'] {
   return match.result;
 }
 
+export function resultLabel(result: NonNullable<Match['result']>) {
+  const penalties = result.penalties ? ` (${result.penalties.home}-${result.penalties.away} pens)` : '';
+  return `${result.home}-${result.away} ${result.status}${penalties}`;
+}
+
 function actualScoreOf(match: Match): PredictionScore | undefined {
   const result = actualResultOf(match);
   return result ? { home: result.home, away: result.away } : undefined;
@@ -54,6 +59,7 @@ function winnerFromScore(match: Match, predictions: Prediction, resolver: (ref: 
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
   if (!score || typeof home === 'string' || typeof away === 'string') return null;
+  if (score.home === score.away && match.result?.winner) return match.result.winner === 'home' ? home : away;
   if (score.home === score.away) return score.home >= 0 ? home : null;
   return score.home > score.away ? home : away;
 }
@@ -63,6 +69,7 @@ function loserFromScore(match: Match, predictions: Prediction, resolver: (ref: s
   const home = resolver(match.homeRef);
   const away = resolver(match.awayRef);
   if (!score || typeof home === 'string' || typeof away === 'string') return null;
+  if (score.home === score.away && match.result?.winner) return match.result.winner === 'home' ? away : home;
   if (score.home === score.away) return score.home >= 0 ? away : null;
   return score.home > score.away ? away : home;
 }
@@ -247,6 +254,11 @@ export function buildDefaultPredictionsForMatches(groupStageMatches: Match[], pl
   });
 
   playoffMatches.forEach((match) => {
+    const result = actualScoreOf(match);
+    if (result) {
+      predictions[match.id] = result;
+      return;
+    }
     const standings = computeStandingsForMatches(predictions, groupStageMatches);
     const resolver = buildResolver(predictions, standings, defaultResolverLabels, {
       groupMatches: groupStageMatches,

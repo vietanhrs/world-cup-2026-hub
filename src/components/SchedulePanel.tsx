@@ -1,6 +1,6 @@
 import { Badge, Card, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { useI18n } from '../i18n';
-import { actualResultOf, formatKickoff } from '../utils/predictions';
+import { actualResultOf, formatKickoff, resultLabel } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, Team } from '../types';
 
@@ -51,7 +51,7 @@ export function SchedulePanel({ groupMatches, resolver, onRoster, onDetails }: S
                     aria-label={`Open match details for ${typeof home === 'string' ? home : home.name} vs ${typeof away === 'string' ? away : away.name}`}
                   >
                     <Badge className="schedule-score" variant="filled" color="green">
-                      {result.home}-{result.away} {result.status}
+                      {resultLabel(result)}
                     </Badge>
                   </UnstyledButton>
                 ) : (

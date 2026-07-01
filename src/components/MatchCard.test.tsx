@@ -44,8 +44,9 @@ describe('MatchCard', () => {
   it('allows score entry for upcoming matches', async () => {
     const user = userEvent.setup();
     const onScore = vi.fn();
-    const match = groupMatches.find((candidate) => candidate.id === 'g-B-3');
-    if (!match) throw new Error('Expected upcoming match fixture');
+    const completedMatch = groupMatches.find((candidate) => candidate.id === 'g-B-3');
+    if (!completedMatch) throw new Error('Expected match fixture');
+    const match = { ...completedMatch, result: undefined };
 
     renderWithProviders(
       <MatchCard match={match} prediction={{ home: null, away: null }} resolver={resolver} onScore={onScore} onRoster={vi.fn()} />,
@@ -63,7 +64,7 @@ describe('MatchCard', () => {
     const user = userEvent.setup();
     const onRoster = vi.fn<(team: Team) => void>();
     const match = groupMatches.find((candidate) => candidate.id === 'g-B-3');
-    if (!match) throw new Error('Expected upcoming match fixture');
+    if (!match) throw new Error('Expected match fixture');
 
     renderWithProviders(
       <MatchCard match={match} prediction={{ home: null, away: null }} resolver={resolver} onScore={vi.fn()} onRoster={onRoster} />,

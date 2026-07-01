@@ -3,7 +3,7 @@ import { Alert, Anchor, Badge, Group, Loader, Modal, SimpleGrid, Stack, Table, T
 import { IconAlertCircle, IconCards, IconExchange, IconSoccerField, IconTrophy } from '@tabler/icons-react';
 import { teamMap } from '../data/groups';
 import { useI18n } from '../i18n';
-import { formatKickoff } from '../utils/predictions';
+import { formatKickoff, resultLabel } from '../utils/predictions';
 import { fetchEspnMatchDetails, hasEnoughMatchDetails, type MatchDetails, type MatchEventKind } from '../utils/matchDetails';
 import { TeamBadge } from './TeamBadge';
 import type { Match, Team } from '../types';
@@ -96,7 +96,7 @@ export function MatchDetailsModal({ match, groupMatches, resolver, onClose, onRo
                 <Group gap="xs" wrap="nowrap">
                   {home ? <TeamBadge value={home} onOpen={onRoster} /> : null}
                   <Badge size="lg" variant="filled" color="green" className="match-detail-score">
-                    {match.result?.home}-{match.result?.away} {match.result?.status}
+                    {match.result ? resultLabel(match.result) : null}
                   </Badge>
                   {away ? <TeamBadge value={away} onOpen={onRoster} /> : null}
                 </Group>

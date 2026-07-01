@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge, Card, Group, NumberInput, Text, UnstyledButton } from '@mantine/core';
 import { useI18n } from '../i18n';
-import { actualResultOf, formatKickoff } from '../utils/predictions';
+import { actualResultOf, formatKickoff, resultLabel } from '../utils/predictions';
 import { TeamBadge } from './TeamBadge';
 import type { Match, PredictionScore, Team } from '../types';
 
@@ -103,7 +103,7 @@ export function MatchCard({ match, prediction, resolver, onScore, onRoster, onDe
             disabled={!onDetails}
             aria-label={`Open match details for ${typeof home === 'string' ? home : home.name} vs ${typeof away === 'string' ? away : away.name}`}
           >
-            {actualResult.home}-{actualResult.away} {actualResult.status}
+            {resultLabel(actualResult)}
           </UnstyledButton>
         ) : (
           <>

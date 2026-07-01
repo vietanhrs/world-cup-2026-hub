@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { groupMatches } from '../data/schedule';
-import { buildDefaultPredictions, computeStandings, withActualResults } from './predictions';
+import { knockoutMatches } from '../data/schedule';
+import { buildDefaultPredictions, buildResolver, computeStandings, resultLabel, withActualResults } from './predictions';
 
 describe('prediction result helpers', () => {
   it('overrides user predictions with actual completed match scores', () => {
@@ -21,27 +21,42 @@ describe('prediction result helpers', () => {
     expect(predictions['g-H-2']).toEqual({ home: 0, away: 0 });
   });
 
-  it('computes standings from completed results even when no user prediction exists', () => {
+  it('computes final group standings from completed results even when no user prediction exists', () => {
     const standings = computeStandings(withActualResults({}));
     const groupA = standings.A;
 
     expect(groupA.find((row) => row.team.id === 'mexico')).toMatchObject({
-      played: 1,
-      won: 1,
-      points: 3,
-      gf: 2,
+      played: 3,
+      won: 3,
+      points: 9,
+      gf: 6,
       ga: 0,
     });
     expect(groupA.find((row) => row.team.id === 'south-africa')).toMatchObject({
-      played: 1,
+      played: 3,
+      won: 1,
+      drawn: 1,
       lost: 1,
-      points: 0,
-      gf: 0,
-      ga: 2,
+      points: 4,
+      gf: 2,
+      ga: 3,
     });
   });
 
-  it('keeps upcoming group matches editable by leaving them without result metadata', () => {
-    expect(groupMatches.find((match) => match.id === 'g-B-3')?.result).toBeUndefined();
+  it('uses the actual round-of-32 third-place pairings', () => {
+    expect(knockoutMatches.find((match) => match.id === 'r32-2')).toMatchObject({ homeRef: '1E', awayRef: '3D' });
+    expect(knockoutMatches.find((match) => match.id === 'r32-5')).toMatchObject({ homeRef: '1I', awayRef: '3F' });
+    expect(knockoutMatches.find((match) => match.id === 'r32-8')).toMatchObject({ homeRef: '1L', awayRef: '3K' });
+    expect(knockoutMatches.find((match) => match.id === 'r32-13')).toMatchObject({ homeRef: '1B', awayRef: '3J' });
+  });
+
+  it('uses penalty winners when completed knockout scores are tied', () => {
+    const predictions = buildDefaultPredictions();
+    const standings = computeStandings(predictions);
+    const resolver = buildResolver(predictions, standings);
+
+    expect(resolver('W:r32-2')).toMatchObject({ id: 'paraguay' });
+    expect(resolver('W:r32-3')).toMatchObject({ id: 'morocco' });
+    expect(resultLabel(knockoutMatches.find((match) => match.id === 'r32-2')!.result!)).toBe('1-1 FT (3-4 pens)');
   });
 });
